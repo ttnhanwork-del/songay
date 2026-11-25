@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sổ Ngày · Widget</title>
+<meta name="theme-color" content="#0a5f92">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font:14px/1.35 "Be Vietnam Pro",Roboto,system-ui,sans-serif;background:#0a5f92;color:#fff;overflow:hidden}
+a.w{display:flex;height:100%;color:inherit;text-decoration:none;padding:10px 12px;gap:12px;align-items:stretch}
+.l{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;color:#0a5f92;border-radius:14px;padding:6px 10px;min-width:82px;flex:none}
+.l .n{font-size:44px;font-weight:800;line-height:1}
+.l .wd{font-size:12px;font-weight:700;color:#10222e}
+.l .m{font-size:11px;color:#5b6f7c}
+.r{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.t1{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t1 .g{color:#e8b23d}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.p{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.ok{background:#d9f2e4;color:#16613d}.bad{background:#fde3e7;color:#a30d26}.mid{background:#f7ecd2;color:#7a5a10}
+.h{font-size:12px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h b{font-weight:700}
+@media(max-height:130px){.h2{display:none}.l .n{font-size:36px}}
+@media(max-width:250px){.l{min-width:66px}.l .n{font-size:34px}}
+</style></head><body>
+<a class="w" id="w" href="./" target="_blank" rel="noopener"></a>
+<script>
+{
+/* ---------- âm lịch (thuật toán Hồ Ngọc Đức, múi giờ +7) ---------- */
+const PI=Math.PI,TZ=7;
+const jdn=(dd,mm,yy)=>{const a=Math.floor((14-mm)/12),y=yy+4800-a,m=mm+12*a-3;let j=dd+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)-32045;if(j<2299161)j=dd+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-32083;return j};
+function newMoon(k){const T=k/1236.85,T2=T*T,T3=T2*T,dr=PI/180;let J=2415020.75933+29.53058868*k+0.0001178*T2-0.000000155*T3;J+=0.00033*Math.sin((166.56+132.87*T-0.009173*T2)*dr);const M=359.2242+29.10535608*k-0.0000333*T2-0.00000347*T3,Mp=306.0253+385.81691806*k+0.0107306*T2+0.00001236*T3,F=21.2964+390.67050646*k-0.0016528*T2-0.00000239*T3;let C=(0.1734-0.000393*T)*Math.sin(M*dr)+0.0021*Math.sin(2*dr*M);C=C-0.4068*Math.sin(Mp*dr)+0.0161*Math.sin(dr*2*Mp)-0.0004*Math.sin(dr*3*Mp);C=C+0.0104*Math.sin(dr*2*F)-0.0051*Math.sin(dr*(M+Mp))-0.0074*Math.sin(dr*(M-Mp))+0.0004*Math.sin(dr*(2*F+M));C=C-0.0004*Math.sin(dr*(2*F-M))-0.0006*Math.sin(dr*(2*F+Mp))+0.0010*Math.sin(dr*(2*F-Mp))+0.0005*Math.sin(dr*(2*Mp+M));const dt=T<-11?0.001+0.000839*T+0.0002261*T2-0.00000845*T3-0.000000081*T*T3:-0.000278+0.000265*T+0.000262*T2;return J+C-dt}
+const nmDay=k=>Math.floor(newMoon(k)+0.5+TZ/24);
+function sunDeg(j){const T=(j-2451545)/36525,T2=T*T,dr=PI/180,M=357.5291+35999.0503*T-0.0001559*T2-0.00000048*T*T2,L0=280.46645+36000.76983*T+0.0003032*T2;let DL=(1.9146-0.004817*T-0.000014*T2)*Math.sin(dr*M)+(0.019993-0.000101*T)*Math.sin(dr*2*M)+0.00029*Math.sin(dr*3*M);let L=L0+DL;return L-360*Math.floor(L/360)}
+const sunSeg=d=>Math.floor(sunDeg(d-0.5-TZ/24)/30);
+function m11(yy){const k=Math.floor((jdn(31,12,yy)-2415021)/29.530588853);let n=nmDay(k);if(sunSeg(n)>=9)n=nmDay(k-1);return n}
+function leapOff(a11){const k=Math.floor((a11-2415021.076998695)/29.530588853+0.5);let last,i=1,arc=sunSeg(nmDay(k+i));do{last=arc;i++;arc=sunSeg(nmDay(k+i))}while(arc!=last&&i<14);return i-1}
+const LC={};
+function lunar(dd,mm,yy){const key=yy*10000+mm*100+dd;if(LC[key])return LC[key];const dn=jdn(dd,mm,yy),k=Math.floor((dn-2415021.076998695)/29.530588853);let ms=nmDay(k+1);if(ms>dn)ms=nmDay(k);let a11=m11(yy),b11=a11,ly;if(a11>=ms){ly=yy;a11=m11(yy-1)}else{ly=yy+1;b11=m11(yy+1)}const ld=dn-ms+1,diff=Math.floor((ms-a11)/29);let leap=0,lm=diff+11;if(b11-a11>365){const lo=leapOff(a11);if(diff>=lo){lm=diff+10;if(diff==lo)leap=1}}if(lm>12)lm-=12;if(lm>=11&&diff<4)ly-=1;return LC[key]={d:ld,m:lm,y:ly,leap,jd:dn}}
+/* ---------- dữ liệu lịch pháp ---------- */
+const CAN=['Giáp','Ất','Bính','Đinh','Mậu','Kỷ','Canh','Tân','Nhâm','Quý'];
+const CHI=['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
+const GIAP=['Chuột','Trâu','Hổ','Mèo','Rồng','Rắn','Ngựa','Dê','Khỉ','Gà','Chó','Lợn'];
+const NA=[['Hải Trung Kim','vàng trong biển'],['Lư Trung Hỏa','lửa trong lò'],['Đại Lâm Mộc','gỗ rừng già'],['Lộ Bàng Thổ','đất ven đường'],['Kiếm Phong Kim','vàng mũi kiếm'],['Sơn Đầu Hỏa','lửa trên núi'],['Giản Hạ Thủy','nước khe suối'],['Thành Đầu Thổ','đất trên thành'],['Bạch Lạp Kim','vàng chân đèn'],['Dương Liễu Mộc','gỗ cây dương liễu'],['Tuyền Trung Thủy','nước giữa dòng suối'],['Ốc Thượng Thổ','đất mái nhà'],['Tích Lịch Hỏa','lửa sấm sét'],['Tùng Bách Mộc','gỗ tùng bách'],['Trường Lưu Thủy','nước chảy dài'],['Sa Trung Kim','vàng trong cát'],['Sơn Hạ Hỏa','lửa dưới chân núi'],['Bình Địa Mộc','gỗ đồng bằng'],['Bích Thượng Thổ','đất trên vách'],['Kim Bạch Kim','vàng pha bạch kim'],['Phú Đăng Hỏa','lửa ngọn đèn'],['Thiên Hà Thủy','nước trên trời'],['Đại Trạch Thổ','đất nền nhà lớn'],['Thoa Xuyến Kim','vàng trang sức'],['Tang Đố Mộc','gỗ cây dâu'],['Đại Khê Thủy','nước khe lớn'],['Sa Trung Thổ','đất pha cát'],['Thiên Thượng Hỏa','lửa trên trời'],['Thạch Lựu Mộc','gỗ cây lựu đá'],['Đại Hải Thủy','nước biển lớn']];
+const HANH=['Kim','Thủy','Mộc','Hỏa','Thổ'];
+const hIdx=n=>HANH.indexOf(n.split(' ').pop());
+const sinh=i=>(i+1)%5,khac=i=>(i+2)%5;
+function rel(me,o){if(me===o)return['bình hòa',0];if(sinh(o)===me)return['tương sinh cho bạn',1];if(sinh(me)===o)return['bạn sinh ra (hao lực)',0];if(khac(o)===me)return['khắc bạn',-1];return['bạn khắc',0]}
+const idx60=(c,h)=>((6*c-5*h)%60+60)%60;
+const napOf=(c,h)=>NA[Math.floor(idx60(c,h)/2)];
+const TIET=['Xuân phân','Thanh minh','Cốc vũ','Lập hạ','Tiểu mãn','Mang chủng','Hạ chí','Tiểu thử','Đại thử','Lập thu','Xử thử','Bạch lộ','Thu phân','Hàn lộ','Sương giáng','Lập đông','Tiểu tuyết','Đại tuyết','Đông chí','Tiểu hàn','Đại hàn','Lập xuân','Vũ thủy','Kinh trập'];
+const THAN=[['Thanh Long',1],['Minh Đường',1],['Thiên Hình',0],['Chu Tước',0],['Kim Quỹ',1],['Kim Đường',1],['Bạch Hổ',0],['Ngọc Đường',1],['Thiên Lao',0],['Huyền Vũ',0],['Tư Mệnh',1],['Câu Trận',0]];
+const TRUC=[
+['Kiến',1,['Xuất hành','Khai trương','Nhậm chức','Gặp đối tác, quý nhân'],['Động thổ','Đào giếng','Lợp mái nhà']],
+['Trừ',1,['Dọn dẹp, bỏ thói quen xấu','Khám chữa bệnh','Cắt tóc, làm đẹp'],['Cưới hỏi','Khai trương','Đi xa']],
+['Mãn',1,['Cầu tài, cầu phúc','Mua sắm, nhập hàng','Mở kho'],['Kiện tụng','Nhậm chức','Uống thuốc lâu dài']],
+['Bình',0,['Sửa sang nhà cửa','Việc thường ngày','Làm đường, san nền'],['Đào mương','Kiện tụng']],
+['Định',1,['Ký hợp đồng, giao dịch','Cưới hỏi','Nhập học','Lên kế hoạch dài hạn'],['Kiện tụng','Xuất hành xa','Chữa bệnh']],
+['Chấp',0,['Xây dựng, tu sửa','Trồng cây','Tuyển người'],['Xuất hành','Chuyển nhà','Chi tiền lớn']],
+['Phá',-1,['Phá dỡ nhà cũ','Chữa bệnh'],['Cưới hỏi','Khai trương','Ký kết','Khởi công việc lớn']],
+['Nguy',-1,['Cúng lễ, tĩnh tâm','Việc nhỏ, cẩn trọng'],['Leo cao, đi sông nước','Đầu tư mạo hiểm','Vay mượn']],
+['Thành',1,['Khai trương','Cưới hỏi','Ký kết','Nhập học, xây dựng'],['Kiện tụng','Tranh chấp']],
+['Thu',0,['Thu tiền, đòi nợ','Thu hoạch, tích trữ','Mua hàng'],['Khai trương','Chi tiền lớn','An táng']],
+['Khai',1,['Khai trương','Nhậm chức','Xuất hành','Cưới hỏi, động thổ'],['An táng','Đào mộ']],
+['Bế',-1,['Hoàn tất việc dang dở','Nghỉ ngơi','Lấp hố, đắp đê'],['Khai trương','Nhậm chức','Xuất hành','Chữa mắt']]];
+const GHD=['110100101100','001101001011','110011010010','101100110100','001011001101','010010110011'];
+const WD=['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+const hourRange=i=>{const s=(i*2+23)%24;return `${s}h–${(s+2)%24}h`};
+const tamHop=(a,b)=>a!==b&&(a-b+12)%4===0;
+const lucHop=(a,b)=>(a+b)%12===1;
+const xung=(a,b)=>Math.abs(a-b)===6;
+const hai=(a,b)=>(a+b)%12===7;
+function dayInfo(y,m,d){
+const L=lunar(d,m,y),jd=L.jd,cD=(jd+9)%10,hD=(jd+1)%12;
+const cM=(L.y*12+L.m+3)%10,hM=(L.m+1)%12,cY=(L.y+6)%10,hY=(L.y+8)%12;
+const sd=sunDeg(jd-0.5-TZ/24),tiet=TIET[Math.floor(sd/15)];
+const mTiet=(Math.floor(((sd-315+360)%360)/30)+2)%12;
+const truc=TRUC[(hD-mTiet+12)%12];
+const start=((L.m-1)%6)*2,than=THAN[(hD-start+12)%12];
+const hours=[...GHD[hD%6]].map((v,i)=>v==='1'?i:-1).filter(i=>i>=0);
+return {L,cD,hD,cM,hM,cY,hY,tiet,truc,than,hours,nap:napOf(cD,hD),wd:new Date(y,m-1,d).getDay()};
+}
+
+const q=new URLSearchParams(location.search);
+const by=+(q.get('nam')||q.get('nu')||q.get('y')||1996);
+const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1,d=now.getDate();
+const I=dayInfo(y,m,d),L=I.L;
+const oc=(by+6)%10,oh=(by+8)%12,onap=napOf(oc,oh);
+let s=(I.than[1]?1:-1)+I.truc[1];
+if(xung(I.hD,oh))s-=2;else if(hai(I.hD,oh))s-=1;
+if(tamHop(I.hD,oh)||lucHop(I.hD,oh))s+=1;
+s+=rel(hIdx(onap[0]),hIdx(I.nap[0]))[1];
+if([3,7,13,18,22,27].includes(L.d))s-=1;if([5,14,23].includes(L.d))s-=1;
+const v=s>=3?['Rất tốt','ok']:s>=1?['Khá tốt','ok']:s===0?['Bình thường','mid']:s>=-2?['Nên cẩn trọng','bad']:['Xấu','bad'];
+const hr=i=>{const a=(i*2+23)%24;return a+'–'+(a+2)%24+'h'};
+const cur=Math.floor(((now.getHours()+1)%24)/2);
+const nextH=I.hours.find(i=>i>=cur);
+const hs=I.hours.map(i=>(i===cur?'<b>':'')+CHI[i]+(i===cur?'</b>':'')).join(' · ');
+document.getElementById('w').innerHTML=`<div class="l"><div class="wd">${WD[I.wd]}</div><div class="n">${d}</div><div class="m">Tháng ${m}/${y}</div></div>
+<div class="r"><div class="t1">Âm <span class="g">${L.d}/${L.m}${L.leap?'n':''}</span> · ngày ${CAN[I.cD]} ${CHI[I.hD]}</div>
+<div class="row"><span class="p ${I.than[1]?'ok':'bad'}">${I.than[1]?'Hoàng đạo':'Hắc đạo'}</span><span class="p ${v[1]}">${v[0]} với tuổi ${CAN[oc]} ${CHI[oh]}</span></div>
+<div class="h">Giờ tốt: ${hs}</div>
+<div class="h h2">${nextH!=null?(nextH===cur?'Đang trong giờ '+CHI[cur]+' ('+hr(cur)+') tốt':'Giờ tốt kế tiếp: '+CHI[nextH]+' '+hr(nextH)):'Hết giờ tốt hôm nay'} · Trực ${I.truc[0]}</div></div>`;
+}
+</script></body></html>
