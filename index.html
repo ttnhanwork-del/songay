@@ -132,6 +132,27 @@ label.f input,label.f select{display:block;width:100%;margin-top:4px;font-size:1
 .modal .box{background:var(--paper);border-radius:20px;max-width:560px;width:100%;padding:22px}
 textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;font-size:13px}
 .note{font-size:12px;color:var(--mut);margin-top:12px}
+.daybox{max-width:680px;padding:0!important;background:var(--bg)!important}
+.dmhead{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:6px;background:var(--pri);color:#fff;padding:10px 12px}
+.dmhead b{flex:1;text-align:center;font-size:16px}
+.dmhead button{border:0;background:rgba(255,255,255,.16);color:#fff;min-width:44px;min-height:40px;border-radius:10px;font-size:18px;cursor:pointer}
+.dmbody{padding:12px;display:grid;gap:12px}.dmbody .sheet{box-shadow:none}
+#dayModal{padding:3vh 12px}
+.tdy{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tdy-d{background:var(--pri);color:#fff;border-radius:14px;width:64px;height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+.tdy-d b{font-size:30px;line-height:1}.tdy-d span{font-size:11px}.tdy-i{flex:1 1 200px}
+.mini2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0 12px}
+.mini2>div{background:var(--bg);border-radius:12px;padding:8px 12px;display:flex;flex-direction:column}
+.mini2 .t{font-size:12px;color:var(--mut);font-weight:600}.mini2 b{font-size:18px}
+.crow{display:flex;align-items:flex-end;gap:10px;margin-bottom:10px}.cst{width:28px;height:44px;display:flex;align-items:center;flex:none}
+.mini{width:84px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px;min-height:40px}
+.items li span.u{flex:none}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.sres{background:var(--bg);border-radius:14px;padding:14px}
+.sres-big{font-size:24px;font-weight:800;color:var(--pri);line-height:1.15;margin-top:4px}
+.kv .v2{text-align:right}
+.yrs{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+.ychip{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:4px 8px;font-size:13px;cursor:pointer;min-height:32px}
 @media(max-width:860px){.g2,.g2e,.ptop{grid-template-columns:minmax(0,1fr)}.cols{grid-template-columns:minmax(0,1fr)}}
 header{padding-top:max(10px,env(safe-area-inset-top))}
 @media(max-width:600px){
@@ -140,6 +161,9 @@ header{padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-ri
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;border-radius:0;background:var(--paper);border-top:1px solid var(--line);padding:6px 8px max(6px,env(safe-area-inset-bottom));gap:6px;box-shadow:0 -4px 16px rgba(0,0,0,.08)}
 .tabs button{flex:1;color:var(--mut);padding:8px 4px;min-height:48px;font-size:14px}
 .tabs button[aria-selected=true]{background:var(--psoft);color:var(--pri)}
+.tabs button{font-size:13px;padding:8px 2px}
+.dmhead{padding-top:max(10px,env(safe-area-inset-top))}.dmbody{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+#dayModal{padding:0}
 main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 .card{padding:14px;border-radius:16px}
 #t-lich.on{display:flex;flex-direction:column}#t-lich .g2{order:1}#t-lich .g2e{order:2}#dayinfo{order:3}
@@ -165,6 +189,7 @@ main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 <button role="tab" data-t="lich" aria-selected="true">Lịch</button>
 <button role="tab" data-t="bao-cao" aria-selected="false">Báo cáo</button>
 <button role="tab" data-t="phong-thuy" aria-selected="false">Phong Thủy</button>
+<button role="tab" data-t="chi-tieu" aria-selected="false">Chỉ tiêu</button>
 </nav>
 <button class="icon" id="install" hidden>Cài thành app</button>
 <button class="icon" id="openSet">Hồ sơ</button>
@@ -172,8 +197,7 @@ main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 </header>
 <main>
 <section class="tab on" id="t-lich">
-<div class="g2">
-<div class="sheet" id="sheet"></div>
+<div class="card" id="todayCard" style="margin-bottom:12px"></div>
 <div class="card">
 <div class="calnav">
 <h2 id="calTitle"></h2>
@@ -181,14 +205,10 @@ main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 <button class="btn" id="todayB">Hôm nay</button>
 <button class="btn" id="nextM" aria-label="Tháng sau">›</button>
 </div>
+<div id="monthSum"></div>
 <div class="grid" id="cal"></div>
 <div class="legend"><span><i style="background:var(--ok)"></i>Số âm xanh: ngày hoàng đạo</span><span id="lgIco"></span></div>
-</div>
-</div>
-<div class="card" id="dayinfo" style="margin-bottom:16px"></div>
-<div class="g2e">
-<div class="card" id="health"></div>
-<div class="card" id="spend"></div>
+<p class="note" style="margin-bottom:0">Bấm vào một ngày để xem chi tiết và ghi số liệu.</p>
 </div>
 </section>
 <section class="tab" id="t-bao-cao">
@@ -201,6 +221,7 @@ main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 <div id="report"></div>
 </section>
 <section class="tab" id="t-phong-thuy">
+<div class="card" style="margin-bottom:16px"><h2>Tra cứu nhanh</h2><label class="f" style="margin:0">Gõ năm sinh, tuổi, mệnh hoặc nạp âm<input id="ptQ" type="search" placeholder="nam 1996, nữ 2000, Bính Tý, Giản Hạ Thủy…" autocomplete="off"></label><div id="ptRes" style="margin-top:12px"></div></div>
 <div class="ptop">
 <div class="card">
 <h2>Thông tin tra cứu</h2>
@@ -212,6 +233,7 @@ main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 </div>
 <div id="ptOut" style="margin-top:16px"></div>
 </section>
+<section class="tab" id="t-chi-tieu"><div id="goalsBox"></div></section>
 </main>
 <div class="modal" id="setup" role="dialog" aria-modal="true" aria-labelledby="setT">
 <form class="box" id="setForm">
@@ -226,11 +248,10 @@ main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 <label class="f">Chiều cao (cm)<input type="number" id="fH" required min="100" max="230" inputmode="decimal"></label>
 <label class="f">Cân nặng (kg)<input type="number" id="fW" required min="30" max="250" step="0.1" inputmode="decimal"></label>
 </div>
-<div class="row">
-<label class="f">Mục tiêu cân nặng<select id="fGoal"><option value="keep">Giữ cân</option><option value="lose">Giảm cân nhẹ (−400 kcal/ngày)</option><option value="gain">Tăng cân nhẹ (+300 kcal/ngày)</option></select></label>
-<label class="f">Mục tiêu vận động (kcal/ngày)<input type="number" id="fEx" min="0" max="3000" value="300" inputmode="numeric"></label>
-</div>
-<label class="f">Hạn mức chi tiêu mỗi ngày (đ)<input id="fLim" required inputmode="numeric" placeholder="Ví dụ: 200000 hoặc 200k"></label>
+<div id="setGoals"><div class="row">
+<label class="f">Mục tiêu cân nặng<select id="fGoal"><option value="keep">Giữ cân</option><option value="lose">Giảm cân</option><option value="gain">Tăng cân</option></select></label>
+<label class="f">Hạn mức chi tiêu mỗi ngày (đ)<input id="fLim" inputmode="numeric" placeholder="Ví dụ: 200000 hoặc 200k"></label>
+</div><p class="note" style="margin-top:0">Số kg muốn giảm, mức thâm hụt calo, vận động và chỉ tiêu riêng chỉnh trong tab Chỉ tiêu.</p></div>
 <div class="row" style="margin-top:6px"><button class="btn pri" type="submit">Lưu hồ sơ</button><button class="btn" type="button" id="setClose">Đóng</button></div>
 <div id="backup">
 <h3>Sao lưu dữ liệu</h3>
@@ -241,6 +262,12 @@ main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 <div class="sm mut" id="bkMsg"></div>
 </div>
 </form>
+</div>
+<div class="modal" id="dayModal" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+<div class="box daybox">
+<div class="dmhead"><button type="button" id="dPrev" aria-label="Ngày trước">‹</button><b id="dTitle"></b><button type="button" id="dNext" aria-label="Ngày sau">›</button><button type="button" id="dClose" aria-label="Đóng">✕</button></div>
+<div class="dmbody"><div class="sheet" id="sheet"></div><div class="card" id="health"></div><div class="card" id="spend"></div><div class="card" id="custom"></div><div class="card" id="dayinfo"></div></div>
+</div>
 </div>
 <script>
 {
@@ -310,14 +337,17 @@ const kc=n=>Math.round(n||0).toLocaleString('vi-VN')+' kcal';
 const sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('vi-VN');
 function parseMoney(s){s=String(s||'').toLowerCase().replace(/\s|đ|vnd/g,'');const m=s.match(/^([\d.,]+)(k|tr|m)?$/);if(!m)return NaN;if(m[2]){const v=parseFloat(m[1].replace(',','.'));return Math.round(v*(m[2]==='k'?1e3:1e6))}return parseInt(m[1].replace(/[.,]/g,''),10)}
 /* ---------- trạng thái & lưu trữ ---------- */
-let S={profile:null,days:{}},db=null,uid=null,ready=false;
+const DEF_G={mode:'keep',deficit:500,surplus:300,loseKg:0,ex:300,lim:200000,custom:[]};
+let S={profile:null,goals:null,days:{}},db=null,uid=null,ready=false;
+function migrate(){if(S.profile&&!S.goals){const P=S.profile;S.goals={...DEF_G,mode:P.goal||'keep',deficit:P.goal==='lose'?400:500,ex:P.ex??300,lim:P.lim||0}}if(S.goals)S.goals={...DEF_G,...S.goals,custom:S.goals.custom||[]}}
 const LS='songay.v1';
-try{const j=JSON.parse(localStorage.getItem(LS)||'null');if(j){S.profile=j.profile||null;S.days=j.days||{}}}catch(e){}
+try{const j=JSON.parse(localStorage.getItem(LS)||'null');if(j){S.profile=j.profile||null;S.goals=j.goals||null;S.days=j.days||{}}}catch(e){}
+migrate();
 const lsSave=()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}};
 const dirty=new Set();let tmr=null,flushing=false;
 function setStatus(t){$('#status').textContent=t}
 function save(key){lsSave();dirty.add(key);clearTimeout(tmr);tmr=setTimeout(flush,700)}
-async function flush(){if(!db||!uid||flushing)return;flushing=true;try{while(dirty.size){const k=[...dirty][0];dirty.delete(k);let body;if(k==='profile')body={p:S.profile};else{const pre=k.slice(2),days={};for(const d in S.days)if(d.startsWith(pre))days[d]=S.days[d];body={days}}try{await db.doc('data/users/'+uid+'/'+k).set(body);setStatus('Đã lưu vào tài khoản Claude của bạn · dùng được trên mọi thiết bị')}catch(e){setStatus('Chưa lưu được lên tài khoản, dữ liệu vẫn nằm trên trình duyệt này');if(e&&e.code==='unavailable')dirty.add(k);break}}}finally{flushing=false}}
+async function flush(){if(!db||!uid||flushing)return;flushing=true;try{while(dirty.size){const k=[...dirty][0];dirty.delete(k);let body;if(k==='profile')body={p:S.profile,g:S.goals||null};else{const pre=k.slice(2),days={};for(const d in S.days)if(d.startsWith(pre))days[d]=S.days[d];body={days}}try{await db.doc('data/users/'+uid+'/'+k).set(body);setStatus('Đã lưu vào tài khoản Claude của bạn · dùng được trên mọi thiết bị')}catch(e){setStatus('Chưa lưu được lên tài khoản, dữ liệu vẫn nằm trên trình duyệt này');if(e&&e.code==='unavailable')dirty.add(k);break}}}finally{flushing=false}}
 const timeout=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))]);
 async function initDb(){
 try{
@@ -326,8 +356,8 @@ const [d,u]=await Promise.all([window.claude.use('db'),window.claude.use('user')
 if(!d||!u)throw 0;const id=await u.id();if(!id)throw 0;
 const snap=await timeout(d.collection('data/users/'+id).get(),10000);
 db=d;uid=id;const local={...S.days},cloudKeys=new Set();
-for(const doc of snap.docs){const x=doc.data()||{};if(doc.id==='profile'&&x.p)S.profile=x.p;else if(doc.id.startsWith('m-')&&x.days){for(const k in x.days){S.days[k]=x.days[k];cloudKeys.add(k)}}}
-if(!snap.docs.some(x=>x.id==='profile')&&S.profile)dirty.add('profile');
+for(const doc of snap.docs){const x=doc.data()||{};if(doc.id==='profile'&&x.p){S.profile=x.p;if(x.g)S.goals=x.g;else dirty.add('profile')}else if(doc.id.startsWith('m-')&&x.days){for(const k in x.days){S.days[k]=x.days[k];cloudKeys.add(k)}}}
+migrate();if(!snap.docs.some(x=>x.id==='profile')&&S.profile)dirty.add('profile');
 for(const k in local)if(!cloudKeys.has(k))dirty.add('m-'+k.slice(0,7));
 lsSave();setStatus('Đã đồng bộ với tài khoản Claude của bạn');if(dirty.size)flush();
 }catch(e){setStatus(window.claude?'Dữ liệu đang lưu trên trình duyệt này · nên sao lưu định kỳ trong Hồ sơ':'Dữ liệu lưu trên điện thoại này · nhớ tải file sao lưu định kỳ trong Hồ sơ')}
@@ -336,11 +366,12 @@ ready=true;if(!S.profile)openSetup(true);renderAll();
 /* ---------- hồ sơ & mục tiêu ---------- */
 function ageAt(dob,date){const [y,m,d]=pd(dob),[Y,M,D]=pd(date);return Y-y-((M<m||(M===m&&D<d))?1:0)}
 function targets(date){
-const P=S.profile;if(!P)return null;const a=ageAt(P.dob,date);
-const bmr=10*P.w+6.25*P.h-5*a+(P.sex==='nam'?5:-161),base=bmr*1.2,ex=+P.ex||0;
-const adj=P.goal==='lose'?-400:P.goal==='gain'?300:0;
-return {bmr,base,ex,in:Math.max(bmr,base+ex+adj),out:base+ex,lim:+P.lim||0};
+const P=S.profile,G=S.goals;if(!P||!G)return null;const a=ageAt(P.dob,date);
+const bmr=10*P.w+6.25*P.h-5*a+(P.sex==='nam'?5:-161),base=bmr*1.2,ex=+G.ex||0;
+const adj=G.mode==='lose'?-(+G.deficit||0):G.mode==='gain'?(+G.surplus||0):0,raw=base+ex+adj;
+return {bmr,base,ex,in:Math.max(bmr,raw),clamped:raw<bmr,out:base+ex,lim:+G.lim||0};
 }
+function refreshSnapshots(){for(const k in S.days){if(k>=TODAY){const t=targets(k);if(t){S.days[k].t={in:Math.round(t.in),out:Math.round(t.out),base:Math.round(t.base),ex:t.ex,lim:t.lim};save('m-'+k.slice(0,7))}}}}
 function owner(){const P=S.profile;if(!P)return null;const [y,m,d]=pd(P.dob),L=lunar(d,m,y);const c=(L.y+6)%10,h=(L.y+8)%12;return {ly:L.y,c,h,nap:napOf(c,h),sex:P.sex}}
 function personal(I){
 const o=owner();if(!o)return {f:[],s:0};const f=[];
@@ -360,17 +391,19 @@ function verdict(I){const p=personal(I),t=(I.than[1]?1:-1)+I.truc[1]+p.s;const v
 /* ---------- lịch ---------- */
 let sel=TODAY,view={y:now.getFullYear(),m:now.getMonth()+1};
 const dayRec=k=>S.days[k]||null;
-const logged=r=>r&&(r.in!=null||r.ex!=null||r.w!=null||(r.sp&&r.sp.length));
-const ST_TXT=['Không đạt mục tiêu','Đạt 1 trong 2 mục tiêu','Đạt cả 2 mục tiêu'];
+const logged=r=>r&&(r.in!=null||r.ex!=null||r.w!=null||(r.sp&&r.sp.length)||(r.c&&Object.values(r.c).some(v=>v!=null)));
+const ST_TXT=['Không đạt chỉ tiêu nào','Đạt một phần chỉ tiêu','Đạt tất cả chỉ tiêu'];
 function ico(s,z=18){const c=s===2?'var(--ok)':s===1?'var(--half)':'var(--red)';
 const inner=s===2?'<path d="M6.5 12.5l3.5 3.5 7.5-8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
 :s===1?'<path d="M12 3a9 9 0 0 1 0 18z" fill="#fff" opacity=".9"/><path d="M8.5 12.5l2 2 3.5-4" fill="none" stroke="'+c+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" transform="translate(-1.5 0)"/>'
 :'<path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>';
 return `<span class="ico" role="img" aria-label="${ST_TXT[s]}"><svg width="${z}" height="${z}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="${c}"/>${inner}</svg></span>`}
-function goals(k){const r=dayRec(k);if(!logged(r))return null;const t=tOf(k);if(!t)return null;
-const sp=(r.sp||[]).reduce((a,x)=>a+x.a,0),gain=S.profile&&S.profile.goal==='gain';
-const h=r.in!=null&&(gain?r.in>=t.in:r.in<=t.in);return {h,s:sp<=t.lim,hasIn:r.in!=null,sp,t}}
-function dayStatus(k){const g=goals(k);if(!g)return null;return (g.h?1:0)+(g.s?1:0)}
+function evalDay(k){const r=dayRec(k);if(!logged(r))return null;const t=tOf(k);if(!t)return null;const G=S.goals||DEF_G;
+const sp=(r.sp||[]).reduce((a,x)=>a+x.a,0),gain=G.mode==='gain';
+const items=[{n:'Calo',met:r.in!=null&&(gain?r.in>=t.in:r.in<=t.in)},{n:'Chi tiêu',met:sp<=t.lim}];
+(G.custom||[]).filter(c=>c.on!==false).forEach(c=>{const v=r.c?r.c[c.id]:null;items.push({n:c.name,met:v!=null&&(c.dir==='max'?v<=c.target:v>=c.target)})});
+const m=items.filter(i=>i.met).length;return {items,m,n:items.length,s:m===items.length?2:m===0?0:1,sp,t}}
+function dayStatus(k){const e=evalDay(k);return e?e.s:null}
 function renderCal(){
 const {y,m}=view,first=(new Date(y,m-1,1).getDay()+6)%7,nd=new Date(y,m,0).getDate();
 const L1=lunar(1,m,y);
@@ -378,7 +411,7 @@ $('#calTitle').textContent=`Tháng ${m}/${y}`;
 let h=['T2','T3','T4','T5','T6','T7','CN'].map(x=>`<div class="wh">${x}</div>`).join('')+'<div></div>'.repeat(first);
 for(let d=1;d<=nd;d++){const I=dayInfo(y,m,d),k=ds(y,m,d),L=I.L;
 const lab=L.d===1?`${L.d}/${L.m}${L.leap?'n':''}`:L.d===15?'Rằm':L.d;
-const cls=['c',I.than[1]?'hd':'',L.d===1?'l1':'',I.wd===0?'sun':'',k===TODAY?'today':'',k===sel?'sel':''].join(' ');
+const cls=['c',I.than[1]?'hd':'',L.d===1?'l1':'',I.wd===0?'sun':'',k===TODAY?'today':''].join(' ');
 h+=`<button class="${cls}" data-d="${k}" aria-label="Ngày ${d}/${m}, âm ${L.d}/${L.m}"><b>${d}</b><small>${lab}</small>${(s=>s==null?'':`<span class="st" title="${ST_TXT[s]}">${ico(s,15)}</span>`)(dayStatus(k))}</button>`}
 $('#cal').innerHTML=h;
 }
@@ -392,7 +425,7 @@ $('#sheet').innerHTML=`<div class="top"><span>Tháng ${m} · ${y}</span><span>${
 <span class="mut">Tiết khí</span><b>${I.tiet}</b>
 <span class="mut">Thần</span><b>${I.than[0]} <span class="pill ${I.than[1]?'p-ok':'p-bad'}">${I.than[1]?'Hoàng đạo':'Hắc đạo'}</span></b>
 <span class="mut">Trực</span><b>${I.truc[0]}</b>
-${(g=>g?`<span class="mut">Kết quả</span><b class="stline">${ico((g.h?1:0)+(g.s?1:0),20)} ${ST_TXT[(g.h?1:0)+(g.s?1:0)]}<span class="sm mut">(calo ${g.h?'đạt':g.hasIn?'chưa đạt':'chưa ghi'} · chi tiêu ${g.s?'trong hạn mức':'vượt'})</span></b>`:'')(goals(sel))}
+${(e=>e?`<span class="mut">Kết quả</span><b class="stline">${ico(e.s,20)} ${e.m}/${e.n} chỉ tiêu<span class="sm mut">(${e.items.map(i=>esc(i.n)+(i.met?' ✓':' ✗')).join(' · ')})</span></b>`:'')(evalDay(sel))}
 ${S.profile?`<span class="mut">Với bạn</span><b><span class="pill ${v[1]}">${v[0]}</span></b>`:''}</div>`;
 }
 function renderDayInfo(){
@@ -402,7 +435,7 @@ const nen=[...I.truc[2]],ky=[...I.truc[3]];
 if(!I.than[1])ky.push('Khởi sự việc thật quan trọng');
 if(p.f.some(x=>x[0]<=-2))ky.unshift('Việc lớn của riêng bạn (ký kết, đầu tư, đi xa)');
 const bad=CHI.map((c,i)=>i).filter(i=>!I.hours.includes(i)).map(i=>`${CHI[i]} (${hourRange(i)})`).join(', ');
-$('#dayinfo').innerHTML=`<h2>Ngày ${d}/${m}/${y} · âm lịch ${I.L.d}/${I.L.m}</h2>
+$('#dayinfo').innerHTML=`<h2>Giờ tốt & việc nên làm</h2>
 <h3 style="margin-top:0">Giờ hoàng đạo</h3>
 <div class="hours">${I.hours.map(i=>`<div class="hr ${i===curH?'now':''}"><b>${CHI[i]}</b><span>${hourRange(i)}</span></div>`).join('')}</div>
 <p class="sm mut" style="margin:8px 0 4px">Giờ hắc đạo: ${bad}</p>
@@ -463,9 +496,27 @@ const monthKey=k=>'m-'+k.slice(0,7);
 function onHealthInput(e){
 const id=e.target.id;if(!['hIn','hEx','hW'].includes(id))return;
 const r=rec(sel),v=e.target.value===''?null:Number(e.target.value);
-r[{hIn:'in',hEx:'ex',hW:'w'}[id]]=isFinite(v)?v:null;save(monthKey(sel));healthRes();renderCal();renderSheet();
+r[{hIn:'in',hEx:'ex',hW:'w'}[id]]=isFinite(v)?v:null;save(monthKey(sel));healthRes();refresh();
 }
-function renderLich(){renderSheet();renderCal();renderDayInfo();renderHealth();renderSpend()}
+function renderCustom(){const el=$('#custom'),list=((S.goals&&S.goals.custom)||[]).filter(c=>c.on!==false);
+if(!list.length){el.innerHTML='<h2>Chỉ tiêu riêng</h2><p class="mut sm" style="margin:0">Chưa có chỉ tiêu riêng. Thêm ở tab <b>Chỉ tiêu</b>, ví dụ uống nước, ngủ đủ giờ, đọc sách.</p>';return}
+const r=dayRec(sel)||{};
+el.innerHTML='<h2>Chỉ tiêu riêng</h2>'+list.map(c=>{const v=r.c?r.c[c.id]:null;return `<div class="crow"><label class="f" style="margin:0;flex:1">${esc(c.name)} <span class="sm">(${c.dir==='max'?'tối đa':'tối thiểu'} ${c.target} ${esc(c.unit)})</span><input type="number" inputmode="decimal" step="any" data-cid="${esc(c.id)}" value="${v??''}" placeholder="${c.target}"></label><span class="cst" data-cst="${esc(c.id)}">${cIco(c,v)}</span></div>`}).join('');}
+function cIco(c,v){return v==null?'':ico((c.dir==='max'?v<=c.target:v>=c.target)?2:0,24)}
+function renderToday(){const [y,m,d]=pd(TODAY),I=dayInfo(y,m,d),e=evalDay(TODAY),{v}=verdict(I);
+$('#todayCard').innerHTML=`<div class="tdy"><div class="tdy-d"><b>${d}</b><span>${WD[I.wd]}</span></div><div class="tdy-i"><div><b>Hôm nay ${d}/${m}/${y}</b> · âm lịch ${I.L.d}/${I.L.m} năm ${CAN[I.cY]} ${CHI[I.hY]}</div><div class="sm" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="pill ${I.than[1]?'p-ok':'p-bad'}">${I.than[1]?'Hoàng đạo':'Hắc đạo'}</span>${S.profile?`<span class="pill ${v[1]}">${v[0]}</span>`:''}${e?`<span class="stline">${ico(e.s,18)} ${e.m}/${e.n} chỉ tiêu</span>`:''}</div></div><button class="btn pri" id="openToday">${e?'Xem & sửa':'Ghi hôm nay'}</button></div>`}
+function renderMonthSum(){const {y,m}=view,nd=new Date(y,m,0).getDate(),start=ds(y,m,1),end=ds(y,m,nd)>TODAY?TODAY:ds(y,m,nd);
+if(start>TODAY){$('#monthSum').innerHTML='<p class="mut sm">Tháng này chưa tới.</p>';return}
+const keys=[];for(let i=1;i<=nd;i++){const k=ds(y,m,i);if(k<=end)keys.push(k)}
+const o=agg(start,end),dSp=o.sp-o.lim,dIn=o.inn-o.tin;
+$('#monthSum').innerHTML=stRow(stCounts(keys))+`<div class="mini2"><div><span class="t">Chi tiêu tháng</span><b>${money(o.sp)}</b><span class="sm ${dSp>0?'minus':'plus'}">${o.spDays?(dSp>0?'Vượt ':'Dư ')+money(Math.abs(dSp)):'Chưa ghi'}</span></div><div><span class="t">Calo TB/ngày</span><b>${o.days?kc(o.inn/o.days):'—'}</b><span class="sm ${dIn>0?'minus':'plus'}">${o.days?(dIn>0?'Tổng vượt ':'Tổng dưới ')+kc(Math.abs(dIn)):'Chưa ghi'}</span></div></div>`}
+function renderHome(){renderToday();renderCal();renderMonthSum()}
+function renderLich(){renderHome()}
+function refresh(){renderSheet();renderHome()}
+function renderDay(){const [y,m,d]=pd(sel);$('#dTitle').textContent=`${WD[new Date(y,m-1,d).getDay()]}, ${d}/${m}/${y}`;$('#rDate').value=sel;renderSheet();renderHealth();renderSpend();renderCustom();renderDayInfo()}
+function openDay(k){sel=k;renderDay();$('#dayModal').classList.add('on');$('#dayModal').scrollTop=0;document.body.style.overflow='hidden'}
+function closeDay(){$('#dayModal').classList.remove('on');document.body.style.overflow=''}
+function shiftDay(n){const [y,m,d]=pd(sel),dt=new Date(y,m-1,d+n);sel=ds(dt.getFullYear(),dt.getMonth()+1,dt.getDate());renderDay();$('#dayModal').scrollTop=0}
 /* ---------- báo cáo ---------- */
 function agg(from,to){
 const o={n:0,days:0,inn:0,tin:0,ex:0,tex:0,sp:0,lim:0,spDays:0,w:[],items:[]};
@@ -491,10 +542,11 @@ return (limit?`<div class="limcap">- - - ${limLabel}</div>`:'')+`<div class="cha
 <div class="axis">${labels.map((l,i)=>`<span>${labels.length>15?(i%5===0||i===labels.length-1?l:''):l}</span>`).join('')}</div>`;
 }
 function stCounts(keys){const c=[0,0,0];keys.forEach(k=>{const s=dayStatus(k);if(s!=null)c[s]++});return c}
-function stRow(c){return `<div class="tiles3">${[2,1,0].map(s=>`<div class="tile"><div class="t">${ico(s,22)}${['Không đạt','Đạt 1 phần','Đạt cả 2'][s]}</div><div class="v">${c[s]} ngày</div></div>`).join('')}</div>`}
+function stRow(c){return `<div class="tiles3">${[2,1,0].map(s=>`<div class="tile"><div class="t">${ico(s,22)}${['Không đạt','Đạt 1 phần','Đạt hết'][s]}</div><div class="v">${c[s]} ngày</div></div>`).join('')}</div>`}
 function stSummary(y,m,a,b,strip){const keys=[];for(let i=a;i<=b;i++)keys.push(ds(y,m,i));
 return stRow(stCounts(keys))+(strip?`<div class="strip">${keys.map(k=>{const s=dayStatus(k);return `<div>${s==null?'<span style="display:inline-block;height:18px"></span>':ico(s,18)}<br>${pd(k)[2]}</div>`}).join('')}</div>`:'')}
 function stYear(y,k){return stRow(stCounts(Object.keys(S.days).filter(x=>x>=ds(y,1,1)&&x<=k)))}
+function customSum(from,to){const L=((S.goals&&S.goals.custom)||[]).filter(c=>c.on!==false);if(!L.length)return '';return `<h3>Chỉ tiêu riêng</h3><ul class="items">${L.map(c=>{let n=0,ok=0;for(const k in S.days){if(k<from||k>to)continue;const v=S.days[k].c&&S.days[k].c[c.id];if(v==null)continue;n++;if(c.dir==='max'?v<=c.target:v>=c.target)ok++}return `<li><span>${esc(c.name)} <span class="mut sm">(${c.dir==='max'?'≤':'≥'} ${c.target} ${esc(c.unit)})</span></span><b>${ok}/${n} ngày đạt</b></li>`}).join('')}</ul>`}
 function renderReport(){
 const el=$('#report');if(!S.profile){el.innerHTML='<div class="card mut">Nhập hồ sơ để bắt đầu.</div>';return}
 const k=$('#rDate').value||sel,[y,m,d]=pd(k),r=dayRec(k)||{},t=tOf(k);
@@ -513,6 +565,7 @@ ${logged(r)?`<div class="tiles">
 <div class="tile"><div class="t">Chi / hạn mức</div><div class="v">${money(sp)}</div><div class="d ${sp>t.lim?'minus':'plus'}">${sp>t.lim?'Vượt '+money(sp-t.lim):'Còn '+money(t.lim-sp)}</div></div></div>`:'<p class="mut">Ngày này chưa có dữ liệu.</p>'}</div>
 <div class="card" style="margin-bottom:16px"><h2>Lũy kế tháng ${m}/${y}</h2><p class="mut sm" style="margin-top:-8px">Từ 1/${m} đến ${d}/${m} · ${mo.n}/${d} ngày có ghi</p>${tiles(mo,'tháng')}
 ${stSummary(y,m,1,d,true)}
+${customSum(ds(y,m,1),k)}
 <div class="g2e" style="margin:14px 0 0"><div><h3>Chi tiêu từng ngày</h3>${bars(dSp,t.lim,lab,money,'Hạn mức '+money(t.lim))}</div>
 <div><h3>Calo nạp từng ngày</h3>${bars(dKc,t.in,lab,kc,'Mục tiêu '+kc(t.in))}</div></div>
 ${top.length?`<h3>Khoản chi lớn nhất tháng</h3><ul class="items">${top.map(x=>`<li><span>${esc(x.n||'Khoản chi')} <span class="mut sm">· ${pd(x.k)[2]}/${m}</span></span><b>${money(x.a)}</b></li>`).join('')}</ul>`:''}</div>
@@ -541,6 +594,21 @@ if(sinh(na)===nb||sinh(nb)===na)s+=1;if(khac(na)===nb||khac(nb)===na)s-=1;res.pu
 const near=(p,q)=>Math.abs(p[0]-y)-Math.abs(q[0]-y);
 return {good:res.filter(r=>r[1]>=2).sort((p,q)=>q[1]-p[1]||near(p,q)).slice(0,7),bad:res.filter(r=>r[1]<=-2).sort((p,q)=>p[1]-q[1]||near(p,q)).slice(0,7)};
 }
+const norm=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'d').toLowerCase().replace(/\s+/g,' ').trim();
+function ptInfo(y,sex){const {c,h}=yc(y),na=napOf(c,h),hanh=na[0].split(' ').pop(),k=kua(y,sex),hi=HANH.indexOf(hanh);return {c,h,na,hanh,cu:CUNG[k],gen:HANH[(hi+4)%5],kill:HANH[(hi+3)%5],dirs:DIRS[k]}}
+function ptCard(y,sex){const i=ptInfo(y,sex),row=(a,b)=>`<div class="kv"><span>${a}</span><span class="v2">${b}</span></div>`;
+return `<div class="sres"><div><b>${sex==='nam'?'Nam':'Nữ'} ${y}</b> · tuổi ${CAN[i.c]} ${CHI[i.h]} (${GIAP[i.h]})</div><div class="sres-big">${i.na[0]}</div><div class="sm mut" style="margin-bottom:6px">${i.na[1]} · mệnh ${i.hanh}</div>${row('Cung mệnh',`${i.cu[0]} · ${i.cu[2]} tứ mệnh`)}${row('Màu hợp',[...COL[i.hanh],...COL[i.gen]].map(x=>x[0]).join(', '))}${row('Màu kỵ',COL[i.kill].map(x=>x[0]).join(', '))}${row('Hướng tốt',i.dirs.slice(0,4).join(', '))}${row('Số may mắn',[...new Set([...NUM[i.hanh],...NUM[i.gen]])].sort((a,b)=>a-b).join(', '))}<button class="btn" style="margin-top:8px;width:100%" data-ptgo="${y}" data-ptsex="${sex}">Xem đầy đủ</button></div>`}
+function ptSearch(){const q=norm($('#ptQ').value),out=$('#ptRes');
+if(!q){out.innerHTML='<p class="mut sm" style="margin:0">Ví dụ: <b>nam 1996</b>, <b>nữ 2000</b>, <b>1990</b>, <b>Bính Tý</b>, <b>Giản Hạ Thủy</b>, <b>mệnh Kim</b>, <b>tuổi Ngựa</b>.</p>';return}
+const ym=q.match(/(19|20)\d{2}/),sex=/(^| )nu( |$)/.test(q)?'nu':/(^| )nam( |$)/.test(q)?'nam':null;
+if(ym){const y=+ym[0];out.innerHTML=`<div class="sgrid">${(sex?[sex]:['nam','nu']).map(s=>ptCard(y,s)).join('')}</div>`;return}
+const qq=q.replace(/(^| )(nam|nu)( |$)/g,' ').replace(/^(tuoi|menh|nap am) /,'').trim();if(!qq){out.innerHTML='<p class="mut sm">Gõ thêm năm sinh, ví dụ "nam 1996".</p>';return}
+const isMenh=/^menh /.test(q),isTuoi=/^tuoi /.test(q),groups=new Map();
+for(let y=1940;y<=2035;y++){const {c,h}=yc(y),na=napOf(c,h),hanh=norm(na[0].split(' ').pop()),cc=norm(CAN[c]+' '+CHI[h]),nn=norm(na[0]),gg=norm(GIAP[h]);
+const hit=isMenh?hanh===qq:isTuoi?(gg===qq||norm(CHI[h])===qq):(cc===qq||cc.startsWith(qq+' ')||nn.includes(qq)||hanh===qq||gg===qq||(qq.includes(' ')&&cc.includes(qq)));
+if(hit){const key=CAN[c]+' '+CHI[h]+'|'+na[0];if(!groups.has(key))groups.set(key,[]);groups.get(key).push(y)}}
+if(!groups.size){out.innerHTML='<p class="mut">Không tìm thấy. Thử gõ năm sinh, ví dụ "nam 1996".</p>';return}
+out.innerHTML=`<p class="sm mut" style="margin:0 0 4px">Bấm vào một năm để xem đầy đủ.</p><ul class="items">${[...groups].map(([k,ys])=>{const [cc,na]=k.split('|');return `<li><span><b>${cc}</b> · ${na}</span><span class="yrs u">${ys.map(y=>`<button class="ychip" data-ptgo="${y}" data-ptsex="${sex||'nam'}">${y}</button>`).join('')}</span></li>`}).join('')}</ul>`}
 function renderPT(){
 const sex=$('#ptSex').value,y=+$('#ptYear').value;
 if(!(y>=1900&&y<=2100)){$('#ptHero').innerHTML='<div class="card mut">Nhập năm sinh để tra cứu.</div>';$('#ptOut').innerHTML='';return}
@@ -571,36 +639,79 @@ $('#ptOut').innerHTML=`<div class="g2e">
 <h3>Năm Tam Tai sắp tới</h3><p style="margin:0">${ttYears.join(', ')}</p></div></div>
 <p class="note">Thông tin phong thủy mang tính tham khảo theo quan niệm dân gian.</p>`;
 }
+/* ---------- chỉ tiêu ---------- */
+function renderGoals(){const el=$('#goalsBox');if(!S.profile||!S.goals){el.innerHTML='<div class="card mut">Nhập hồ sơ trước.</div>';return}
+const G=S.goals;
+el.innerHTML=`<div class="g2e">
+<div class="card"><h2>Calo & cân nặng</h2>
+<label class="f">Mục tiêu<select id="gMode"><option value="keep">Giữ cân</option><option value="lose">Giảm cân</option><option value="gain">Tăng cân</option></select></label>
+<div id="gLose" class="row"><label class="f">Muốn giảm (kg)<input id="gKg" type="number" step="0.5" min="0" inputmode="decimal" value="${G.loseKg||''}" placeholder="Ví dụ: 5"></label><label class="f">Thâm hụt mỗi ngày (kcal)<input id="gDef" type="number" min="0" max="2000" step="50" inputmode="numeric" value="${G.deficit}"></label></div>
+<div id="gGain"><label class="f">Ăn dư mỗi ngày (kcal)<input id="gSur" type="number" min="0" max="2000" step="50" inputmode="numeric" value="${G.surplus}"></label></div>
+<label class="f">Mục tiêu vận động (kcal/ngày)<input id="gEx" type="number" min="0" max="3000" step="50" inputmode="numeric" value="${G.ex}"></label>
+<div id="gSum" class="res"></div></div>
+<div class="card"><h2>Chi tiêu</h2><label class="f">Hạn mức mỗi ngày (đ)<input id="gLim" inputmode="numeric" value="${G.lim}"></label><div id="gLimSum" class="res sm"></div>
+<p class="note">Thay đổi calo và hạn mức áp dụng từ hôm nay trở đi. Các ngày trước vẫn chấm theo chỉ tiêu cũ.</p></div></div>
+<div class="card"><h2>Chỉ tiêu riêng</h2><p class="mut sm" style="margin-top:-6px">Thêm thói quen muốn theo dõi mỗi ngày. Chỉ tiêu riêng được tính vào biểu tượng đạt/không đạt trên lịch.</p>
+<ul class="items" id="gList"></ul>
+<form id="gAdd" class="row" style="margin-top:12px;align-items:flex-end">
+<label class="f" style="flex:2 1 160px">Tên chỉ tiêu<input id="gaN" placeholder="Uống nước" required maxlength="40"></label>
+<label class="f" style="flex:1 1 90px">Mục tiêu<input id="gaT" type="number" step="any" inputmode="decimal" placeholder="2" required></label>
+<label class="f" style="flex:1 1 90px">Đơn vị<input id="gaU" placeholder="lít" maxlength="12"></label>
+<label class="f" style="flex:1 1 130px">Kiểu<select id="gaD"><option value="min">Tối thiểu (≥)</option><option value="max">Tối đa (≤)</option></select></label>
+<button class="btn pri" style="flex:0 0 auto;margin-bottom:10px">Thêm</button></form></div>`;
+$('#gMode').value=G.mode;goalsSum();renderGList()}
+function goalsSum(){const G=S.goals,t=targets(TODAY);$('#gLose').style.display=G.mode==='lose'?'':'none';$('#gGain').style.display=G.mode==='gain'?'':'none';
+let h=`<div class="kv"><span>Chuyển hóa cơ bản (BMR)</span><b>${kc(t.bmr)}</b></div><div class="kv"><span>Tiêu hao nền (sinh hoạt nhẹ)</span><b>${kc(t.base)}</b></div><div class="kv"><span>+ Vận động mục tiêu</span><b>${kc(t.ex)}</b></div><div class="kv"><span>= Tổng tiêu hao dự kiến</span><b>${kc(t.out)}</b></div><div class="kv" style="font-size:16px;margin-top:6px"><span><b>Mục tiêu nạp mỗi ngày</b></span><b class="plus">${kc(t.in)}</b></div>`;
+if(G.mode==='lose'){const def=t.out-t.in,kg=+G.loseKg||0;h+=`<div class="kv"><span>Thâm hụt thực tế</span><b>${kc(def)}/ngày</b></div>`;
+if(kg>0&&def>0){const days=Math.ceil(kg*7700/def);h+=`<div class="kv"><span>Giảm ${String(kg).replace('.',',')} kg mất khoảng</span><b>${days} ngày (~${Math.max(1,Math.round(days/7))} tuần)</b></div>`}
+if(t.clamped)h+=`<p class="minus sm" style="margin:6px 0 0">Mức thâm hụt quá lớn: mục tiêu nạp được giữ bằng mức BMR (${kc(t.bmr)}).</p>`;
+if(G.deficit>1000)h+=`<p class="sm" style="margin:6px 0 0;color:var(--half)">Thường nên thâm hụt khoảng 300–750 kcal/ngày (giảm 0,3–0,7 kg/tuần) để giữ sức khỏe và cơ bắp.</p>`}
+if(G.mode==='gain')h+=`<div class="kv"><span>Ăn dư</span><b>${kc(t.in-t.out)}/ngày</b></div>`;
+h+=`<p class="note" style="margin-bottom:0">1 kg mỡ ≈ 7.700 kcal. Tính theo cân nặng ${String(S.profile.w).replace('.',',')} kg trong Hồ sơ, nhớ cập nhật khi cân thay đổi.</p>`;
+$('#gSum').innerHTML=h;$('#gLimSum').innerHTML=`Tương đương khoảng <b>${money(G.lim*30)}</b> mỗi tháng (30 ngày).`}
+function renderGList(){const L=S.goals.custom;$('#gList').innerHTML=L.length?L.map(c=>`<li><span><b>${esc(c.name)}</b> <span class="mut sm">${c.dir==='max'?'tối đa':'tối thiểu'}</span></span><input class="mini" type="number" step="any" inputmode="decimal" data-gt="${esc(c.id)}" value="${c.target}" aria-label="Mục tiêu ${esc(c.name)}"><span class="sm u">${esc(c.unit)}</span><button class="x" type="button" data-gdel="${esc(c.id)}" aria-label="Xóa ${esc(c.name)}">×</button></li>`).join(''):'<li class="mut sm">Chưa có chỉ tiêu riêng.</li>'}
+function updateGoals(){const G=S.goals;G.mode=$('#gMode').value;G.loseKg=Math.max(0,+$('#gKg').value||0);G.deficit=Math.max(0,+$('#gDef').value||0);G.surplus=Math.max(0,+$('#gSur').value||0);G.ex=Math.max(0,+$('#gEx').value||0);const l=parseMoney($('#gLim').value);if(l>=0)G.lim=l;refreshSnapshots();save('profile');goalsSum();renderHome()}
+$('#goalsBox').addEventListener('input',e=>{const t=e.target;if(t.dataset.gt){const c=S.goals.custom.find(x=>x.id===t.dataset.gt),v=parseFloat(t.value);if(c&&isFinite(v)){c.target=v;save('profile');renderHome()}return}if(['gMode','gKg','gDef','gSur','gEx','gLim'].includes(t.id))updateGoals()});
+$('#goalsBox').addEventListener('submit',e=>{if(e.target.id!=='gAdd')return;e.preventDefault();const n=$('#gaN').value.trim(),tg=parseFloat($('#gaT').value);if(!n||!isFinite(tg))return;S.goals.custom.push({id:'c'+Date.now().toString(36),name:n.slice(0,40),target:tg,unit:$('#gaU').value.trim().slice(0,12),dir:$('#gaD').value,on:true});save('profile');renderGList();e.target.reset();renderHome()});
+$('#goalsBox').addEventListener('click',e=>{const b=e.target.closest('[data-gdel]');if(!b)return;S.goals.custom=S.goals.custom.filter(x=>x.id!==b.dataset.gdel);save('profile');renderGList();renderHome()});
 /* ---------- hồ sơ (modal) ---------- */
 function openSetup(first){
-const P=S.profile||{};$('#fName').value=P.name||'';$('#fSex').value=P.sex||'nam';$('#fDob').value=P.dob||'';$('#fH').value=P.h||'';$('#fW').value=P.w||'';$('#fGoal').value=P.goal||'keep';$('#fEx').value=P.ex??300;$('#fLim').value=P.lim||'';
+const P=S.profile||{};$('#fName').value=P.name||'';$('#fSex').value=P.sex||'nam';$('#fDob').value=P.dob||'';$('#fH').value=P.h||'';$('#fW').value=P.w||'';$('#fGoal').value='keep';$('#fLim').value='';$('#setGoals').style.display=S.goals?'none':'';
 $('#setClose').style.display=first?'none':'';$('#backup').style.display=first?'none':'';$('#setup').classList.add('on');$('#bkMsg').textContent='';
 }
-$('#setForm').addEventListener('submit',e=>{e.preventDefault();const lim=parseMoney($('#fLim').value);if(!(lim>=0)){$('#fLim').setCustomValidity('Nhập số tiền, ví dụ 200000 hoặc 200k');$('#fLim').reportValidity();return}
-S.profile={name:$('#fName').value.trim(),sex:$('#fSex').value,dob:$('#fDob').value,h:+$('#fH').value,w:+$('#fW').value,goal:$('#fGoal').value,ex:+$('#fEx').value||0,lim};
+$('#setForm').addEventListener('submit',e=>{e.preventDefault();const first=!S.goals;let lim=0;if(first){lim=parseMoney($('#fLim').value);if(!(lim>=0)){$('#fLim').setCustomValidity('Nhập số tiền, ví dụ 200000 hoặc 200k');$('#fLim').reportValidity();return}}
+S.profile={name:$('#fName').value.trim(),sex:$('#fSex').value,dob:$('#fDob').value,h:+$('#fH').value,w:+$('#fW').value};
+if(first)S.goals={...DEF_G,mode:$('#fGoal').value,lim};refreshSnapshots();
 save('profile');$('#setup').classList.remove('on');syncPT(true);renderAll()});
 $('#fLim').addEventListener('input',e=>e.target.setCustomValidity(''));
 $('#setClose').addEventListener('click',()=>$('#setup').classList.remove('on'));
 $('#openSet').addEventListener('click',()=>openSetup(false));
 $('#bkCopy').addEventListener('click',async()=>{const t=JSON.stringify(S);try{await navigator.clipboard.writeText(t);$('#bkMsg').textContent='Đã sao chép. Dán vào ghi chú hoặc email để cất giữ.'}catch(e){$('#bkText').value=t;$('#bkText').select();$('#bkMsg').textContent='Không sao chép tự động được: dữ liệu đã hiện trong ô, hãy chọn và sao chép.'}});
-$('#bkLoad').addEventListener('click',()=>{try{const j=JSON.parse($('#bkText').value);if(!j||typeof j.days!=='object')throw 0;if(j.profile)S.profile=j.profile;Object.assign(S.days,j.days);save('profile');new Set(Object.keys(j.days).map(monthKey)).forEach(k=>save(k));$('#bkMsg').textContent='Đã khôi phục '+Object.keys(j.days).length+' ngày dữ liệu.';renderAll()}catch(e){$('#bkMsg').textContent='Bản sao lưu không hợp lệ.'}});
+$('#bkLoad').addEventListener('click',()=>{try{const j=JSON.parse($('#bkText').value);if(!j||typeof j.days!=='object')throw 0;if(j.profile)S.profile=j.profile;if(j.goals)S.goals=j.goals;migrate();Object.assign(S.days,j.days);save('profile');new Set(Object.keys(j.days).map(monthKey)).forEach(k=>save(k));$('#bkMsg').textContent='Đã khôi phục '+Object.keys(j.days).length+' ngày dữ liệu.';renderAll()}catch(e){$('#bkMsg').textContent='Bản sao lưu không hợp lệ.'}});
 /* ---------- điều hướng & sự kiện ---------- */
 function syncPT(force){const o=owner();if(o&&(force||!$('#ptYear').value)){$('#ptYear').value=o.ly;$('#ptSex').value=o.sex}}
-function showTab(t){if(!['lich','bao-cao','phong-thuy'].includes(t))t='lich';document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));if(t==='bao-cao')renderReport();if(t==='phong-thuy'){syncPT();renderPT()}}
+function showTab(t){if(!['lich','bao-cao','phong-thuy','chi-tieu'].includes(t))t='lich';document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));if(t==='bao-cao')renderReport();if(t==='phong-thuy'){syncPT();renderPT();ptSearch()}if(t==='chi-tieu')renderGoals()}
 document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b){location.hash=b.dataset.t;showTab(b.dataset.t)}});
 window.addEventListener('hashchange',()=>showTab(location.hash.slice(1)));
-$('#cal').addEventListener('click',e=>{const b=e.target.closest('.c');if(!b)return;sel=b.dataset.d;$('#rDate').value=sel;renderLich()});
-$('#prevM').addEventListener('click',()=>{view.m--;if(view.m<1){view.m=12;view.y--}renderCal()});
-$('#nextM').addEventListener('click',()=>{view.m++;if(view.m>12){view.m=1;view.y++}renderCal()});
+$('#cal').addEventListener('click',e=>{const b=e.target.closest('.c');if(!b)return;openDay(b.dataset.d)});
+$('#todayCard').addEventListener('click',e=>{if(e.target.closest('#openToday'))openDay(TODAY)});
+$('#dClose').addEventListener('click',closeDay);$('#dPrev').addEventListener('click',()=>shiftDay(-1));$('#dNext').addEventListener('click',()=>shiftDay(1));
+$('#dayModal').addEventListener('click',e=>{if(e.target.id==='dayModal')closeDay()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#dayModal').classList.contains('on'))closeDay()});
+$('#custom').addEventListener('input',e=>{const id=e.target.dataset.cid;if(!id)return;const r=rec(sel);r.c=r.c||{};const v=e.target.value===''?null:Number(e.target.value);r.c[id]=isFinite(v)?v:null;save(monthKey(sel));const c=S.goals.custom.find(x=>x.id===id),s=document.querySelector(`[data-cst="${CSS.escape(id)}"]`);if(c&&s)s.innerHTML=cIco(c,r.c[id]);refresh()});
+$('#ptQ').addEventListener('input',ptSearch);
+$('#ptRes').addEventListener('click',e=>{const b=e.target.closest('[data-ptgo]');if(!b)return;$('#ptYear').value=b.dataset.ptgo;$('#ptSex').value=b.dataset.ptsex;renderPT();$('#ptHero').scrollIntoView({behavior:'smooth',block:'start'})});
+$('#prevM').addEventListener('click',()=>{view.m--;if(view.m<1){view.m=12;view.y--}renderHome()});
+$('#nextM').addEventListener('click',()=>{view.m++;if(view.m>12){view.m=1;view.y++}renderHome()});
 $('#todayB').addEventListener('click',()=>{sel=TODAY;view={y:now.getFullYear(),m:now.getMonth()+1};renderLich()});
 $('#health').addEventListener('input',onHealthInput);
-$('#spend').addEventListener('submit',e=>{if(e.target.id!=='spForm')return;e.preventDefault();const a=parseMoney($('#spA').value);if(!(a>0)){$('#spErr').textContent='Nhập số tiền hợp lệ, ví dụ 50000, 50k hoặc 1.2tr';return}$('#spErr').textContent='';const r=rec(sel);r.sp=[...(r.sp||[]),{a,n:$('#spN').value.trim().slice(0,80)}];save(monthKey(sel));$('#spA').value='';$('#spN').value='';$('#spA').focus();spendRes();renderCal();renderSheet()});
-$('#spend').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;const r=rec(sel);r.sp=r.sp.filter((_,i)=>i!==+b.dataset.del);save(monthKey(sel));spendRes();renderCal();renderSheet()});
+$('#spend').addEventListener('submit',e=>{if(e.target.id!=='spForm')return;e.preventDefault();const a=parseMoney($('#spA').value);if(!(a>0)){$('#spErr').textContent='Nhập số tiền hợp lệ, ví dụ 50000, 50k hoặc 1.2tr';return}$('#spErr').textContent='';const r=rec(sel);r.sp=[...(r.sp||[]),{a,n:$('#spN').value.trim().slice(0,80)}];save(monthKey(sel));$('#spA').value='';$('#spN').value='';$('#spA').focus();spendRes();refresh()});
+$('#spend').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;const r=rec(sel);r.sp=r.sp.filter((_,i)=>i!==+b.dataset.del);save(monthKey(sel));spendRes();refresh()});
 $('#rDate').addEventListener('change',renderReport);
 $('#rToday').addEventListener('click',()=>{$('#rDate').value=TODAY;renderReport()});
 $('#ptSex').addEventListener('change',renderPT);$('#ptYear').addEventListener('input',renderPT);
-function renderAll(){renderLich();if($('#t-bao-cao').classList.contains('on'))renderReport();if($('#t-phong-thuy').classList.contains('on')){syncPT();renderPT()}}
-$('#lgIco').innerHTML=[2,1,0].map(s=>`<span class="stline" style="display:inline-flex;gap:5px;margin-right:12px">${ico(s,14)}${s===2?'Đạt cả 2':s===1?'Đạt 1 phần':'Không đạt'}</span>`).join('');
+function renderAll(){renderLich();if($('#dayModal').classList.contains('on'))renderDay();if($('#t-chi-tieu').classList.contains('on'))renderGoals();if($('#t-bao-cao').classList.contains('on'))renderReport();if($('#t-phong-thuy').classList.contains('on')){syncPT();renderPT()}}
+$('#lgIco').innerHTML=[2,1,0].map(s=>`<span class="stline" style="display:inline-flex;gap:5px;margin-right:12px">${ico(s,14)}${s===2?'Đạt hết chỉ tiêu':s===1?'Đạt 1 phần':'Không đạt'}</span>`).join('');
 (async()=>{try{if(!window.claude||!window.claude.use)return;const dk=await window.claude.use('desktop');if(!dk||!dk.install)return;if(await dk.install.state()==='available'){const b=$('#install');b.hidden=false;b.addEventListener('click',async()=>{try{await dk.install.request()}catch(e){}})}}catch(e){}})();
 if(!window.claude){
 $('#bkFileRow').hidden=false;
