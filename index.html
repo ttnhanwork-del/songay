@@ -261,6 +261,7 @@ main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 <textarea id="bkText" placeholder="Dán bản sao lưu vào đây" style="margin-top:8px"></textarea>
 <div class="sm mut" id="bkMsg"></div>
 </div>
+<div id="syncBox" hidden><h3>Đồng bộ đám mây & widget</h3><div id="syncIn"></div></div>
 </form>
 </div>
 <div class="modal" id="dayModal" role="dialog" aria-modal="true" aria-labelledby="dTitle">
@@ -341,13 +342,42 @@ const DEF_G={mode:'keep',deficit:500,surplus:300,loseKg:0,ex:300,lim:200000,cust
 let S={profile:null,goals:null,days:{}},db=null,uid=null,ready=false;
 function migrate(){if(S.profile&&!S.goals){const P=S.profile;S.goals={...DEF_G,mode:P.goal||'keep',deficit:P.goal==='lose'?400:500,ex:P.ex??300,lim:P.lim||0}}if(S.goals)S.goals={...DEF_G,...S.goals,custom:S.goals.custom||[]}}
 const LS='songay.v1';
-try{const j=JSON.parse(localStorage.getItem(LS)||'null');if(j){S.profile=j.profile||null;S.goals=j.goals||null;S.days=j.days||{}}}catch(e){}
+try{const j=JSON.parse(localStorage.getItem(LS)||'null');if(j){S.profile=j.profile||null;S.goals=j.goals||null;S.days=j.days||{};S.pu=j.pu||0}}catch(e){}
 migrate();
+let SK=null,lastSync=0,setupFirst=false;try{SK=localStorage.getItem('songay.key')}catch(e){}
+const FS='https://firestore.googleapis.com/v1/projects/so-ngay-e0528/databases/(default)/documents';
 const lsSave=()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}};
 const dirty=new Set();let tmr=null,flushing=false;
 function setStatus(t){$('#status').textContent=t}
-function save(key){lsSave();dirty.add(key);clearTimeout(tmr);tmr=setTimeout(flush,700)}
-async function flush(){if(!db||!uid||flushing)return;flushing=true;try{while(dirty.size){const k=[...dirty][0];dirty.delete(k);let body;if(k==='profile')body={p:S.profile,g:S.goals||null};else{const pre=k.slice(2),days={};for(const d in S.days)if(d.startsWith(pre))days[d]=S.days[d];body={days}}try{await db.doc('data/users/'+uid+'/'+k).set(body);setStatus('Đã lưu vào tài khoản Claude của bạn · dùng được trên mọi thiết bị')}catch(e){setStatus('Chưa lưu được lên tài khoản, dữ liệu vẫn nằm trên trình duyệt này');if(e&&e.code==='unavailable')dirty.add(k);break}}}finally{flushing=false}}
+function save(key){if(key==='profile')S.pu=Date.now();else if(key.startsWith('m-')&&typeof sel==='string'&&sel.startsWith(key.slice(2))&&S.days[sel])S.days[sel].u=Date.now();lsSave();dirty.add(key);clearTimeout(tmr);tmr=setTimeout(flush,700)}
+async function flush(){if((!(db&&uid)&&!SK)||flushing)return;flushing=true;try{while(dirty.size){const k=[...dirty][0];dirty.delete(k);let body;if(k==='profile')body={p:S.profile,g:S.goals||null};else{const pre=k.slice(2),days={};for(const d in S.days)if(d.startsWith(pre))days[d]=S.days[d];body={days}}try{if(db&&uid){await db.doc('data/users/'+uid+'/'+k).set(body);setStatus('Đã lưu vào tài khoản Claude của bạn · dùng được trên mọi thiết bị')}else{await fsPut(k,k==='profile'?{p:S.profile,g:S.goals,pu:S.pu||0}:body);lastSync=Date.now();setStatus('Đã đồng bộ lên đám mây · '+hm())}}catch(e){setStatus(db?'Chưa lưu được lên tài khoản, dữ liệu vẫn nằm trên trình duyệt này':'Chưa đồng bộ được (mất mạng?) · dữ liệu vẫn lưu trên máy');dirty.add(k);break}}}finally{flushing=false}}
+const hm=()=>new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+const fsPath=k=>FS+'/u/'+SK+(k==='profile'?'':'/m/'+k.slice(2));
+async function fsPut(k,obj){const r=await fetch(fsPath(k),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{json:{stringValue:JSON.stringify(obj)},u:{integerValue:String(Date.now())}}})});if(!r.ok)throw new Error('put '+r.status)}
+const fsVal=d=>{try{return JSON.parse(d.fields.json.stringValue)}catch(e){return null}};
+const genKey=()=>{const a=new Uint8Array(24);crypto.getRandomValues(a);return btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
+async function syncPull(){if(!SK||window.claude)return false;try{
+const [pr,mr]=await Promise.all([fetch(FS+'/u/'+SK,{cache:'no-store'}),fetch(FS+'/u/'+SK+'/m?pageSize=300',{cache:'no-store'})]);
+if((pr.status!==200&&pr.status!==404)||!mr.ok)throw 0;
+const pv=pr.status===200?fsVal(await pr.json()):null,mj=await mr.json(),push=new Set();
+if(pv&&pv.p&&(pv.pu||0)>(S.pu||0)){S.profile=pv.p;S.goals=pv.g||S.goals;S.pu=pv.pu;migrate()}else if(S.profile&&(!pv||(S.pu||0)>(pv.pu||0)))push.add('profile');
+const remote={};(mj.documents||[]).forEach(d=>{const v=fsVal(d);if(v&&v.days)Object.assign(remote,v.days)});
+for(const k in remote){const l=S.days[k];if(!l||(remote[k].u||0)>(l.u||0))S.days[k]=remote[k]}
+for(const k in S.days){const r=remote[k];if(!r||(S.days[k].u||0)>(r.u||0))push.add('m-'+k.slice(0,7))}
+lsSave();push.forEach(k=>dirty.add(k));lastSync=Date.now();setStatus('Đã đồng bộ với đám mây · '+hm());
+if(dirty.size)flush();
+if(ready){if(S.profile&&setupFirst&&$('#setup').classList.contains('on'))$('#setup').classList.remove('on');renderAll()}
+return true}catch(e){setStatus('Chưa đồng bộ được (mất mạng?) · dữ liệu vẫn lưu trên máy');return false}}
+function renderSync(){const el=$('#syncIn');if(!el)return;
+if(!SK){el.innerHTML=`<p class="mut sm" style="margin:0 0 8px">Lưu dữ liệu lên đám mây miễn phí để dùng trên nhiều máy và để widget hiện được số liệu trong ngày.</p><button class="btn pri" type="button" id="skNew">Bật đồng bộ</button><p class="sm mut" style="margin:12px 0 4px">Đã bật trên máy khác? Dán mã đồng bộ vào đây:</p><div class="row"><input id="skIn" class="mini" style="flex:3 1 200px;width:auto" placeholder="Mã đồng bộ" autocomplete="off"><button class="btn" type="button" id="skUse">Dùng mã này</button></div><div class="sm minus" id="skErr"></div>`;return}
+const wl=location.href.replace(/[#?].*$/,'').replace(/index\.html$/,'')+'widget.html?k='+SK;
+el.innerHTML=`<p class="sm" style="margin:0 0 6px"><b class="plus">Đang bật.</b> ${lastSync?'Đồng bộ gần nhất lúc '+new Date(lastSync).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):''}</p>
+<div class="kv"><span>Mã đồng bộ</span><b>${esc(SK.slice(0,4))}…${esc(SK.slice(-4))}</b></div>
+<div class="row" style="margin-top:8px"><button class="btn" type="button" id="skCopy">Sao chép mã</button><button class="btn pri" type="button" id="skWid">Sao chép link widget</button></div>
+<p class="note" style="word-break:break-all">${esc(wl)}</p>
+<p class="note">Giữ kín mã và link widget: ai có mã sẽ xem được số liệu của bạn.</p>
+<button class="btn" type="button" id="skOff">Tắt đồng bộ trên máy này</button>`}
+async function copyTxt(t,b){try{await navigator.clipboard.writeText(t);b.textContent='Đã sao chép'}catch(e){$('#bkText').value=t;$('#bkText').select();b.textContent='Đã đưa vào ô bên dưới'}}
 const timeout=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))]);
 async function initDb(){
 try{
@@ -361,7 +391,7 @@ migrate();if(!snap.docs.some(x=>x.id==='profile')&&S.profile)dirty.add('profile'
 for(const k in local)if(!cloudKeys.has(k))dirty.add('m-'+k.slice(0,7));
 lsSave();setStatus('Đã đồng bộ với tài khoản Claude của bạn');if(dirty.size)flush();
 }catch(e){setStatus(window.claude?'Dữ liệu đang lưu trên trình duyệt này · nên sao lưu định kỳ trong Hồ sơ':'Dữ liệu lưu trên điện thoại này · nhớ tải file sao lưu định kỳ trong Hồ sơ')}
-ready=true;if(!S.profile)openSetup(true);renderAll();
+ready=true;if(!S.profile)openSetup(true);renderAll();if(SK&&!window.claude)syncPull();
 }
 /* ---------- hồ sơ & mục tiêu ---------- */
 function ageAt(dob,date){const [y,m,d]=pd(dob),[Y,M,D]=pd(date);return Y-y-((M<m||(M===m&&D<d))?1:0)}
@@ -675,9 +705,9 @@ $('#goalsBox').addEventListener('input',e=>{const t=e.target;if(t.dataset.gt){co
 $('#goalsBox').addEventListener('submit',e=>{if(e.target.id!=='gAdd')return;e.preventDefault();const n=$('#gaN').value.trim(),tg=parseFloat($('#gaT').value);if(!n||!isFinite(tg))return;S.goals.custom.push({id:'c'+Date.now().toString(36),name:n.slice(0,40),target:tg,unit:$('#gaU').value.trim().slice(0,12),dir:$('#gaD').value,on:true});save('profile');renderGList();e.target.reset();renderHome()});
 $('#goalsBox').addEventListener('click',e=>{const b=e.target.closest('[data-gdel]');if(!b)return;S.goals.custom=S.goals.custom.filter(x=>x.id!==b.dataset.gdel);save('profile');renderGList();renderHome()});
 /* ---------- hồ sơ (modal) ---------- */
-function openSetup(first){
+function openSetup(first){setupFirst=!!first;
 const P=S.profile||{};$('#fName').value=P.name||'';$('#fSex').value=P.sex||'nam';$('#fDob').value=P.dob||'';$('#fH').value=P.h||'';$('#fW').value=P.w||'';$('#fGoal').value='keep';$('#fLim').value='';$('#setGoals').style.display=S.goals?'none':'';
-$('#setClose').style.display=first?'none':'';$('#backup').style.display=first?'none':'';$('#setup').classList.add('on');$('#bkMsg').textContent='';
+$('#setClose').style.display=first?'none':'';$('#backup').style.display=first?'none':'';$('#setup').classList.add('on');if(!window.claude)renderSync();$('#bkMsg').textContent='';
 }
 $('#setForm').addEventListener('submit',e=>{e.preventDefault();const first=!S.goals;let lim=0;if(first){lim=parseMoney($('#fLim').value);if(!(lim>=0)){$('#fLim').setCustomValidity('Nhập số tiền, ví dụ 200000 hoặc 200k');$('#fLim').reportValidity();return}}
 S.profile={name:$('#fName').value.trim(),sex:$('#fSex').value,dob:$('#fDob').value,h:+$('#fH').value,w:+$('#fW').value};
@@ -714,7 +744,15 @@ function renderAll(){renderLich();if($('#dayModal').classList.contains('on'))ren
 $('#lgIco').innerHTML=[2,1,0].map(s=>`<span class="stline" style="display:inline-flex;gap:5px;margin-right:12px">${ico(s,14)}${s===2?'Đạt hết chỉ tiêu':s===1?'Đạt 1 phần':'Không đạt'}</span>`).join('');
 (async()=>{try{if(!window.claude||!window.claude.use)return;const dk=await window.claude.use('desktop');if(!dk||!dk.install)return;if(await dk.install.state()==='available'){const b=$('#install');b.hidden=false;b.addEventListener('click',async()=>{try{await dk.install.request()}catch(e){}})}}catch(e){}})();
 if(!window.claude){
-$('#bkFileRow').hidden=false;
+$('#bkFileRow').hidden=false;$('#syncBox').hidden=false;
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&SK&&Date.now()-lastSync>30000)syncPull()});
+window.addEventListener('online',()=>{if(SK)syncPull()});
+$('#syncIn').addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
+if(b.id==='skNew'){SK=genKey();try{localStorage.setItem('songay.key',SK)}catch(x){}if(S.profile)dirty.add('profile');Object.keys(S.days).forEach(k=>dirty.add('m-'+k.slice(0,7)));await flush();lastSync=dirty.size?0:Date.now();renderSync()}
+else if(b.id==='skUse'){const v=$('#skIn').value.trim();if(!/^[A-Za-z0-9_-]{24,64}$/.test(v)){$('#skErr').textContent='Mã không hợp lệ.';return}SK=v;try{localStorage.setItem('songay.key',SK)}catch(x){}b.textContent='Đang tải…';const ok=await syncPull();if(!ok){$('#skErr').textContent='Chưa kết nối được, thử lại sau.'}renderSync()}
+else if(b.id==='skCopy')copyTxt(SK,b);
+else if(b.id==='skWid')copyTxt(location.href.replace(/[#?].*$/,'').replace(/index\.html$/,'')+'widget.html?k='+SK,b);
+else if(b.id==='skOff'){if(b.dataset.c){SK=null;try{localStorage.removeItem('songay.key')}catch(x){}setStatus('Đã tắt đồng bộ · dữ liệu vẫn lưu trên máy');renderSync()}else{b.dataset.c=1;b.textContent='Bấm lần nữa để tắt'}}});
 $('#bkFile').addEventListener('click',()=>{const b=new Blob([JSON.stringify(S)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='so-ngay-sao-luu-'+TODAY+'.json';document.body.appendChild(a);a.click();a.remove();$('#bkMsg').textContent='Đã tải file sao lưu.'});
 $('#bkPick').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;$('#bkText').value=await f.text();$('#bkLoad').click();e.target.value=''});
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}

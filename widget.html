@@ -6,21 +6,23 @@
 <style>
 *{box-sizing:border-box;margin:0}
 html,body{height:100%}
-body{font:14px/1.35 "Be Vietnam Pro",Roboto,system-ui,sans-serif;background:#0a5f92;color:#fff;overflow:hidden}
+body{font:14px/1.35 Roboto,"Be Vietnam Pro",system-ui,sans-serif;background:#0a5f92;color:#fff;overflow:hidden}
 a.w{display:flex;height:100%;color:inherit;text-decoration:none;padding:10px 12px;gap:12px;align-items:stretch}
-.l{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;color:#0a5f92;border-radius:14px;padding:6px 10px;min-width:82px;flex:none}
+.l{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;color:#0a5f92;border-radius:14px;padding:6px 10px;min-width:82px;flex:none;position:relative}
 .l .n{font-size:44px;font-weight:800;line-height:1}
 .l .wd{font-size:12px;font-weight:700;color:#10222e}
 .l .m{font-size:11px;color:#5b6f7c}
+.l .st{position:absolute;top:-6px;right:-6px;line-height:0}
 .r{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px}
 .t1{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t1 .g{color:#e8b23d}
-.row{display:flex;gap:6px;flex-wrap:wrap}
-.p{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
-.ok{background:#d9f2e4;color:#16613d}.bad{background:#fde3e7;color:#a30d26}.mid{background:#f7ecd2;color:#7a5a10}
+.row{display:flex;gap:5px;flex-wrap:nowrap;overflow:hidden}
+.p{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.ok{background:#d9f2e4;color:#16613d}.bad{background:#fde3e7;color:#a30d26}.mid{background:#f7ecd2;color:#7a5a10}.nil{background:rgba(255,255,255,.18);color:#fff}
 .h{font-size:12px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .h b{font-weight:700}
-@media(max-height:130px){.h2{display:none}.l .n{font-size:36px}}
+@media(max-height:150px){.h2{display:none}}
+@media(max-height:120px){.l .n{font-size:36px}.hg{display:none}}
 @media(max-width:250px){.l{min-width:66px}.l .n{font-size:34px}}
 </style></head><body>
 <a class="w" id="w" href="./" target="_blank" rel="noopener"></a>
@@ -81,10 +83,16 @@ const hours=[...GHD[hD%6]].map((v,i)=>v==='1'?i:-1).filter(i=>i>=0);
 return {L,cD,hD,cM,hM,cY,hY,tiet,truc,than,hours,nap:napOf(cD,hD),wd:new Date(y,m-1,d).getDay()};
 }
 
-const q=new URLSearchParams(location.search);
-const by=+(q.get('nam')||q.get('nu')||q.get('y')||1996);
+const FS='https://firestore.googleapis.com/v1/projects/so-ngay-e0528/databases/(default)/documents';
+const q=new URLSearchParams(location.search),K=q.get('k');
 const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1,d=now.getDate();
+const pad=n=>String(n).padStart(2,'0'),TODAY=`${y}-${pad(m)}-${pad(d)}`;
 const I=dayInfo(y,m,d),L=I.L;
+const hr=i=>{const a=(i*2+23)%24;return a+'–'+(a+2)%24+'h'};
+const cur=Math.floor(((now.getHours()+1)%24)/2),nextH=I.hours.find(i=>i>=cur);
+const short=n=>n>=1e6?(Math.round(n/1e5)/10+'tr').replace('.',','):n>=1e3?Math.round(n/1e3)+'k':String(Math.round(n));
+const ICO=s=>{const c=s===2?'#1d9a5c':s===1?'#e0a21a':'#d81b3c';const inner=s===2?'<path d="M6.5 12.5l3.5 3.5 7.5-8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>':s===1?'<path d="M12 3a9 9 0 0 1 0 18z" fill="#fff" opacity=".9"/>':'<path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>';return `<svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="${c}" stroke="#fff" stroke-width="1.5"/>${inner}</svg>`};
+function draw(by,data){
 const oc=(by+6)%10,oh=(by+8)%12,onap=napOf(oc,oh);
 let s=(I.than[1]?1:-1)+I.truc[1];
 if(xung(I.hD,oh))s-=2;else if(hai(I.hD,oh))s-=1;
@@ -92,14 +100,31 @@ if(tamHop(I.hD,oh)||lucHop(I.hD,oh))s+=1;
 s+=rel(hIdx(onap[0]),hIdx(I.nap[0]))[1];
 if([3,7,13,18,22,27].includes(L.d))s-=1;if([5,14,23].includes(L.d))s-=1;
 const v=s>=3?['Rất tốt','ok']:s>=1?['Khá tốt','ok']:s===0?['Bình thường','mid']:s>=-2?['Nên cẩn trọng','bad']:['Xấu','bad'];
-const hr=i=>{const a=(i*2+23)%24;return a+'–'+(a+2)%24+'h'};
-const cur=Math.floor(((now.getHours()+1)%24)/2);
-const nextH=I.hours.find(i=>i>=cur);
 const hs=I.hours.map(i=>(i===cur?'<b>':'')+CHI[i]+(i===cur?'</b>':'')).join(' · ');
-document.getElementById('w').innerHTML=`<div class="l"><div class="wd">${WD[I.wd]}</div><div class="n">${d}</div><div class="m">Tháng ${m}/${y}</div></div>
+let dataRow='',badge='';
+if(data){const r=data.r,G=data.g||{};
+ if(!r){dataRow='<div class="row"><span class="p nil">Chưa ghi số liệu hôm nay · chạm để ghi</span></div>'}
+ else{const t=r.t||{},sp=(r.sp||[]).reduce((a,x)=>a+(+x.a||0),0),gain=G.mode==='gain';
+  const items=[];const calOk=r.in!=null&&t.in&&(gain?r.in>=t.in:r.in<=t.in);items.push(calOk);
+  const spOk=sp<=(t.lim||0);items.push(spOk);
+  (G.custom||[]).filter(c=>c.on!==false).forEach(c=>{const x=r.c?r.c[c.id]:null;items.push(x!=null&&(c.dir==='max'?x<=c.target:x>=c.target))});
+  const mm=items.filter(Boolean).length,st=mm===items.length?2:mm===0?0:1;badge=`<span class="st">${ICO(st)}</span>`;
+  dataRow=`<div class="row"><span class="p ${r.in==null?'nil':calOk?'ok':'bad'}">Calo ${r.in!=null?Math.round(r.in):'–'}/${t.in?Math.round(t.in):'–'}</span><span class="p ${spOk?'ok':'bad'}">Chi ${short(sp)}/${short(t.lim||0)}</span><span class="p ${st===2?'ok':st===1?'mid':'bad'}">${mm}/${items.length}</span></div>`}}
+document.getElementById('w').innerHTML=`<div class="l">${badge}<div class="wd">${WD[I.wd]}</div><div class="n">${d}</div><div class="m">Tháng ${m}/${y}</div></div>
 <div class="r"><div class="t1">Âm <span class="g">${L.d}/${L.m}${L.leap?'n':''}</span> · ngày ${CAN[I.cD]} ${CHI[I.hD]}</div>
 <div class="row"><span class="p ${I.than[1]?'ok':'bad'}">${I.than[1]?'Hoàng đạo':'Hắc đạo'}</span><span class="p ${v[1]}">${v[0]} với tuổi ${CAN[oc]} ${CHI[oh]}</span></div>
-<div class="h">Giờ tốt: ${hs}</div>
-<div class="h h2">${nextH!=null?(nextH===cur?'Đang trong giờ '+CHI[cur]+' ('+hr(cur)+') tốt':'Giờ tốt kế tiếp: '+CHI[nextH]+' '+hr(nextH)):'Hết giờ tốt hôm nay'} · Trực ${I.truc[0]}</div></div>`;
+${dataRow}
+<div class="h hg">Giờ tốt: ${hs}</div>
+<div class="h h2">${nextH!=null?(nextH===cur?'Đang trong giờ '+CHI[cur]+' ('+hr(cur)+') tốt':'Giờ tốt kế tiếp: '+CHI[nextH]+' '+hr(nextH)):'Hết giờ tốt hôm nay'} · Trực ${I.truc[0]}</div></div>`}
+const by0=+(q.get('nam')||q.get('nu')||q.get('y')||1996);
+draw(by0,null);
+if(K&&/^[A-Za-z0-9_-]{24,64}$/.test(K)){
+ const val=d=>{try{return JSON.parse(d.fields.json.stringValue)}catch(e){return null}};
+ Promise.all([fetch(FS+'/u/'+K,{cache:'no-store'}),fetch(FS+'/u/'+K+'/m/'+TODAY.slice(0,7),{cache:'no-store'})]).then(async([a,b])=>{
+  const pv=a.ok?val(await a.json()):null,mv=b.ok?val(await b.json()):null;
+  let by=by0;if(pv&&pv.p&&pv.p.dob&&!q.get('nam')&&!q.get('nu')){const [Y,M,D]=pv.p.dob.split('-').map(Number);by=lunar(D,M,Y).y}
+  draw(by,{g:pv&&pv.g,r:mv&&mv.days?mv.days[TODAY]:null});
+ }).catch(()=>{});
+}
 }
 </script></body></html>
