@@ -1,0 +1,30 @@
+{
+ "name": "Sổ Ngày",
+ "short_name": "Sổ Ngày",
+ "description": "Lịch âm dương, giờ hoàng đạo, theo dõi calo và chi tiêu, phong thủy",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#edf4f8",
+ "theme_color": "#0a5f92",
+ "lang": "vi",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-maskable.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

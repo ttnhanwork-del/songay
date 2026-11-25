@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a5f92">
+<title>Sổ Ngày</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sổ Ngày">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm personal almanac, warm and practical
+IDEA: the Vietnamese tear-off wall calendar (lịch bloc)
+PICTURE: the ocean-blue day sheet with a giant date and its lunar facts
+COLOUR and TYPE: ocean blue, paper white, warm gold; status ticks green/amber/red; Be Vietnam Pro
+LAYOUT: sheet beside the month grid, day panels below; tabs on top, stack on phones */
+:root{color-scheme:light dark;--bg:light-dark(#edf4f8,#0d151b);--paper:light-dark(#fff,#15212a);--ink:light-dark(#10222e,#e8f1f6);--mut:light-dark(#5b6f7c,#93a9b6);--line:light-dark(#d8e5ed,#243541);--pri:light-dark(#0a5f92,#3aa0dc);--pri2:light-dark(#074a73,#2a85bd);--psoft:light-dark(#e2f0f8,#16303f);--half:light-dark(#d99a12,#e8b23d);--red:light-dark(#c8102e,#e8455c);--red2:light-dark(#9e0c24,#c42a40);--soft:light-dark(#fcecee,#2c1c21);--gold:#e2a72a;--ok:light-dark(#1d7a4c,#4cc38a);--oksoft:light-dark(#e6f4ec,#173126)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Be Vietnam Pro",system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--pri);color:#fff;padding:10px max(4vw,14px);display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.01em;margin-right:auto}
+.tabs{display:flex;gap:4px;background:rgba(0,0,0,.18);padding:4px;border-radius:12px}
+.tabs button{border:0;background:none;color:#fff;padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:600;min-height:40px}
+.tabs button[aria-selected=true]{background:#fff;color:var(--pri2)}
+.icon{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:10px;min-height:40px;padding:0 12px;cursor:pointer;font-weight:600}
+#status{font-size:13px;opacity:.85;width:100%;order:9}
+main{max-width:1180px;margin:0 auto;padding:18px max(4vw,14px) 60px}
+.tab{display:none}.tab.on{display:block}
+.g2{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;margin-bottom:16px}
+.g2e{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px}
+h2{font-size:19px;margin:0 0 12px;line-height:1.2}h3{font-size:15px;margin:14px 0 6px}
+.mut{color:var(--mut)}.sm{font-size:13px}
+/* sheet */
+.sheet{background:var(--paper);border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 0 -5px var(--line),0 20px 0 -10px light-dark(#c9dbe6,#1d2c37)}
+.sheet .top{background:var(--pri);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;font-weight:700;border-bottom:4px dotted rgba(255,255,255,.5)}
+.sheet .big{text-align:center;padding:6px 10px 0}
+.sheet .num{font-size:clamp(96px,16vw,150px);font-weight:800;line-height:1;color:var(--pri);letter-spacing:-.05em}
+.sheet .wd{font-weight:700;font-size:20px;margin-top:2px}
+.sheet .lun{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;padding:14px 18px 18px;font-size:14px;border-top:1px solid var(--line);margin-top:12px}
+.sheet .lun b{font-weight:600}
+.ld{display:flex;align-items:center;gap:14px;justify-content:center;margin-top:8px}
+.ld .lnum{font-size:40px;font-weight:800;color:var(--gold);line-height:1}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap}
+.p-ok{background:var(--oksoft);color:var(--ok)}.p-bad{background:var(--soft);color:var(--red)}.p-mid{background:light-dark(#f4ecd8,#2e2717);color:light-dark(#8a6512,#e2b54e)}
+/* calendar */
+.calnav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.calnav h2{margin:0 auto 0 0}
+.btn{border:1px solid var(--line);background:var(--paper);border-radius:10px;min-height:40px;padding:0 14px;cursor:pointer;font-weight:600}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn:focus-visible,.c:focus-visible,input:focus-visible,select:focus-visible,.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wh{font-size:12px;text-align:center;color:var(--mut);font-weight:600;padding:2px 0}
+.c{border:1px solid transparent;background:none;border-radius:10px;padding:6px 2px 4px;min-height:58px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:0;position:relative}
+.c b{font-size:17px;font-weight:700;line-height:1.2}.c small{font-size:11px;color:var(--mut);line-height:1.2}
+.c.hd small{color:var(--ok);font-weight:600}.c.l1 small{color:var(--pri);font-weight:700}
+.c.sun b{color:var(--red)}
+.c.today{border-color:var(--pri)}.c.sel{background:var(--pri);color:#fff}.c.sel small,.c.sel b{color:#fff}
+.c .st{position:absolute;top:3px;right:3px;width:15px;height:15px;line-height:0}
+.c.sel .st svg{filter:drop-shadow(0 0 1.5px #fff)}
+.c:hover:not(.sel){background:var(--psoft)}
+.ico{display:inline-block;vertical-align:-3px;line-height:0}
+.stline{display:flex;gap:8px;align-items:center}
+.strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:4px;margin-top:8px}
+.strip div{text-align:center;font-size:11px;color:var(--mut);background:var(--bg);border-radius:8px;padding:4px 0 2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mut);margin-top:10px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+/* hours */
+.hours{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.hr{border-radius:12px;padding:8px 10px;background:var(--oksoft);color:var(--ok)}
+.hr b{display:block;font-size:15px}.hr span{font-size:13px;white-space:nowrap}
+.hr.now{outline:2px solid var(--ok)}
+ul.l{margin:0;padding-left:18px}ul.l li{margin:2px 0}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.fac{display:flex;gap:8px;align-items:baseline;margin:4px 0;font-size:14px}
+.fac i{font-style:normal;font-weight:800;width:18px;flex:none;text-align:center}
+.plus{color:var(--ok)}.minus{color:var(--red)}
+/* forms */
+label.f{display:block;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:10px}
+label.f input,label.f select{display:block;width:100%;margin-top:4px;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-height:44px}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1 1 140px}
+.meter{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 2px}
+.meter i{display:block;height:100%;background:var(--ok);border-radius:99px}
+.meter.over i{background:var(--red)}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;margin:3px 0}.kv>span{flex:1}.kv b{white-space:nowrap;flex:none}
+.tiles3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.tiles3 .tile{text-align:center;padding:10px 6px}.tiles3 .t{display:block;font-size:12px;line-height:1.3}.tiles3 .t .ico{display:block;margin:0 auto 4px}.tiles3 .v{font-size:20px}
+.limcap{font-size:12px;font-weight:600;color:light-dark(#8a6512,#e2b54e);margin-top:-2px}
+.res{margin-top:12px;padding:12px;border-radius:12px;background:var(--bg)}
+.res .big2{font-size:26px;font-weight:800;line-height:1.1}
+.items{list-style:none;margin:8px 0 0;padding:0}
+.items li{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:6px 0;font-size:14px}
+.items li span{flex:1}.items li b{white-space:nowrap}
+.x{border:0;background:none;color:var(--mut);cursor:pointer;min-width:32px;min-height:32px;border-radius:8px;font-size:18px}
+.x:hover{background:var(--soft);color:var(--red)}
+/* report */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tile{background:var(--bg);border-radius:14px;padding:12px 14px}
+.tile .v{font-size:clamp(20px,3vw,26px);font-weight:800;line-height:1.15;white-space:nowrap}
+.tile .t{font-size:13px;color:var(--mut);font-weight:600}
+.tile .d{font-size:13px;font-weight:600}
+.chart{position:relative;height:170px;display:flex;align-items:flex-end;gap:2px;margin:14px 0 4px;border-bottom:1px solid var(--line)}
+.chart i{flex:1;background:var(--ok);border-radius:3px 3px 0 0;min-height:1px;opacity:.85}
+.chart i.over{background:var(--red)}.chart i.none{background:var(--line);height:2px!important}
+.chart .lim{position:absolute;left:0;right:0;border-top:2px dashed var(--gold)}
+.chart .lim span{position:absolute;right:0;top:-20px;font-size:12px;background:var(--paper);padding:0 4px;color:light-dark(#8a6512,#e2b54e);font-weight:600}
+.axis{display:flex;gap:2px;font-size:11px;color:var(--mut)}.axis span{flex:1;text-align:center}
+/* phong thuy */
+.ptop{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:16px}
+.hero{background:var(--pri);color:#fff;border-radius:18px;padding:20px;position:relative;overflow:hidden}
+.hero h2{font-size:clamp(26px,4vw,38px);line-height:1.08;margin:0 0 8px;text-wrap:balance}
+.hero .sub{opacity:.9}
+.hero svg{position:absolute;right:-30px;bottom:-30px;width:180px;height:180px;opacity:.18}
+.sw{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.sw span{display:flex;align-items:center;gap:6px;font-size:14px;background:var(--bg);border-radius:99px;padding:4px 10px 4px 4px}
+.sw span i{width:22px;height:22px;border-radius:50%;border:1px solid var(--line)}
+.dir{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dir div{background:var(--bg);border-radius:12px;padding:8px 12px;font-size:14px}
+.dir div b{display:block;font-size:16px}
+.ages{display:flex;flex-wrap:wrap;gap:6px}
+.ages span{background:var(--bg);border-radius:10px;padding:5px 10px;font-size:14px}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(20,10,12,.55);display:none;align-items:flex-start;justify-content:center;z-index:20;overflow:auto;padding:4vh 12px}
+.modal.on{display:flex}
+.modal .box{background:var(--paper);border-radius:20px;max-width:560px;width:100%;padding:22px}
+textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;font-size:13px}
+.note{font-size:12px;color:var(--mut);margin-top:12px}
+@media(max-width:860px){.g2,.g2e,.ptop{grid-template-columns:minmax(0,1fr)}.cols{grid-template-columns:minmax(0,1fr)}}
+header{padding-top:max(10px,env(safe-area-inset-top))}
+@media(max-width:600px){
+header{padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));gap:4px 10px}
+.brand{font-size:18px}#status{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;border-radius:0;background:var(--paper);border-top:1px solid var(--line);padding:6px 8px max(6px,env(safe-area-inset-bottom));gap:6px;box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+.tabs button{flex:1;color:var(--mut);padding:8px 4px;min-height:48px;font-size:14px}
+.tabs button[aria-selected=true]{background:var(--psoft);color:var(--pri)}
+main{padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
+.card{padding:14px;border-radius:16px}
+#t-lich.on{display:flex;flex-direction:column}#t-lich .g2{order:1}#t-lich .g2e{order:2}#dayinfo{order:3}
+.g2,.g2e{gap:12px;margin-bottom:12px}
+.sheet .top{padding:10px 14px}.sheet .num{font-size:84px}.sheet .wd{font-size:17px}.ld{margin-top:4px}.ld .lnum{font-size:32px}
+.sheet .lun{padding:10px 14px 14px;font-size:13px;gap:3px 10px;margin-top:8px}
+.calnav .btn{padding:0 10px;min-height:38px}.calnav h2{font-size:17px}
+.grid{gap:2px}.c{min-height:48px;padding:5px 1px 3px;border-radius:8px}.c b{font-size:15px}.c small{font-size:10px}.c .st{width:13px;height:13px;top:2px;right:2px}.c .st svg{width:13px;height:13px}
+.hours{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.hr{padding:6px 8px}.hr span{font-size:12px}
+.row{gap:8px}.row>*{flex:1 1 calc(50% - 8px)}
+.tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tile{padding:10px 12px}.tile .v{font-size:19px;white-space:normal}
+.chart{height:130px}.dir{grid-template-columns:minmax(0,1fr)}
+.hero{padding:16px}.hero h2{font-size:26px}
+.modal{padding:0}.modal .box{border-radius:0;min-height:100%;padding:max(18px,env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
+}
+@media(prefers-reduced-motion:no-preference){.sheet .num{animation:drop .45s ease-out}@keyframes drop{from{transform:translateY(-10px);opacity:0}}}
+</style>
+</head>
+<body>
+<header>
+<div class="brand">Sổ Ngày</div>
+<nav class="tabs" role="tablist">
+<button role="tab" data-t="lich" aria-selected="true">Lịch</button>
+<button role="tab" data-t="bao-cao" aria-selected="false">Báo cáo</button>
+<button role="tab" data-t="phong-thuy" aria-selected="false">Phong Thủy</button>
+</nav>
+<button class="icon" id="install" hidden>Cài thành app</button>
+<button class="icon" id="openSet">Hồ sơ</button>
+<div id="status">Đang tải dữ liệu…</div>
+</header>
+<main>
+<section class="tab on" id="t-lich">
+<div class="g2">
+<div class="sheet" id="sheet"></div>
+<div class="card">
+<div class="calnav">
+<h2 id="calTitle"></h2>
+<button class="btn" id="prevM" aria-label="Tháng trước">‹</button>
+<button class="btn" id="todayB">Hôm nay</button>
+<button class="btn" id="nextM" aria-label="Tháng sau">›</button>
+</div>
+<div class="grid" id="cal"></div>
+<div class="legend"><span><i style="background:var(--ok)"></i>Số âm xanh: ngày hoàng đạo</span><span id="lgIco"></span></div>
+</div>
+</div>
+<div class="card" id="dayinfo" style="margin-bottom:16px"></div>
+<div class="g2e">
+<div class="card" id="health"></div>
+<div class="card" id="spend"></div>
+</div>
+</section>
+<section class="tab" id="t-bao-cao">
+<div class="card" style="margin-bottom:16px">
+<div class="row" style="align-items:flex-end">
+<label class="f" style="margin:0">Xem số liệu tính đến ngày<input type="date" id="rDate"></label>
+<div style="display:flex;gap:8px;flex:0 0 auto"><button class="btn" id="rToday">Hôm nay</button></div>
+</div>
+</div>
+<div id="report"></div>
+</section>
+<section class="tab" id="t-phong-thuy">
+<div class="ptop">
+<div class="card">
+<h2>Thông tin tra cứu</h2>
+<label class="f">Giới tính<select id="ptSex"><option value="nam">Nam</option><option value="nu">Nữ</option></select></label>
+<label class="f">Năm sinh (âm lịch)<input type="number" id="ptYear" min="1900" max="2100" inputmode="numeric"></label>
+<p class="note">Nếu bạn sinh vào tháng 1–2 dương lịch trước Tết, năm âm lịch là năm trước đó. Năm âm lịch của bạn được lấy tự động từ ngày sinh trong Hồ sơ.</p>
+</div>
+<div id="ptHero"></div>
+</div>
+<div id="ptOut" style="margin-top:16px"></div>
+</section>
+</main>
+<div class="modal" id="setup" role="dialog" aria-modal="true" aria-labelledby="setT">
+<form class="box" id="setForm">
+<h2 id="setT">Hồ sơ của bạn</h2>
+<p class="mut sm" style="margin-top:-6px">Dùng để tính gợi ý theo tuổi, lượng calo và hạn mức chi tiêu mỗi ngày.</p>
+<div class="row">
+<label class="f">Tên gọi<input id="fName" placeholder="Ví dụ: Nhân"></label>
+<label class="f">Giới tính<select id="fSex"><option value="nam">Nam</option><option value="nu">Nữ</option></select></label>
+</div>
+<label class="f">Ngày tháng năm sinh (dương lịch)<input type="date" id="fDob" required min="1920-01-01" max="2025-12-31"></label>
+<div class="row">
+<label class="f">Chiều cao (cm)<input type="number" id="fH" required min="100" max="230" inputmode="decimal"></label>
+<label class="f">Cân nặng (kg)<input type="number" id="fW" required min="30" max="250" step="0.1" inputmode="decimal"></label>
+</div>
+<div class="row">
+<label class="f">Mục tiêu cân nặng<select id="fGoal"><option value="keep">Giữ cân</option><option value="lose">Giảm cân nhẹ (−400 kcal/ngày)</option><option value="gain">Tăng cân nhẹ (+300 kcal/ngày)</option></select></label>
+<label class="f">Mục tiêu vận động (kcal/ngày)<input type="number" id="fEx" min="0" max="3000" value="300" inputmode="numeric"></label>
+</div>
+<label class="f">Hạn mức chi tiêu mỗi ngày (đ)<input id="fLim" required inputmode="numeric" placeholder="Ví dụ: 200000 hoặc 200k"></label>
+<div class="row" style="margin-top:6px"><button class="btn pri" type="submit">Lưu hồ sơ</button><button class="btn" type="button" id="setClose">Đóng</button></div>
+<div id="backup">
+<h3>Sao lưu dữ liệu</h3>
+<p class="mut sm" style="margin:0 0 8px">Sao chép toàn bộ dữ liệu để cất giữ, hoặc dán bản sao lưu vào ô dưới rồi bấm Khôi phục.</p>
+<div class="row"><button class="btn" type="button" id="bkCopy">Sao chép dữ liệu</button><button class="btn" type="button" id="bkLoad">Khôi phục</button></div>
+<div class="row" id="bkFileRow" hidden style="margin-top:8px"><button class="btn" type="button" id="bkFile">Tải file sao lưu</button><label class="btn" style="display:flex;align-items:center;justify-content:center">Mở file sao lưu<input type="file" id="bkPick" accept=".json,application/json" hidden></label></div>
+<textarea id="bkText" placeholder="Dán bản sao lưu vào đây" style="margin-top:8px"></textarea>
+<div class="sm mut" id="bkMsg"></div>
+</div>
+</form>
+</div>
+<script>
+{
+/* ---------- âm lịch (thuật toán Hồ Ngọc Đức, múi giờ +7) ---------- */
+const PI=Math.PI,TZ=7;
+const jdn=(dd,mm,yy)=>{const a=Math.floor((14-mm)/12),y=yy+4800-a,m=mm+12*a-3;let j=dd+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)-32045;if(j<2299161)j=dd+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-32083;return j};
+function newMoon(k){const T=k/1236.85,T2=T*T,T3=T2*T,dr=PI/180;let J=2415020.75933+29.53058868*k+0.0001178*T2-0.000000155*T3;J+=0.00033*Math.sin((166.56+132.87*T-0.009173*T2)*dr);const M=359.2242+29.10535608*k-0.0000333*T2-0.00000347*T3,Mp=306.0253+385.81691806*k+0.0107306*T2+0.00001236*T3,F=21.2964+390.67050646*k-0.0016528*T2-0.00000239*T3;let C=(0.1734-0.000393*T)*Math.sin(M*dr)+0.0021*Math.sin(2*dr*M);C=C-0.4068*Math.sin(Mp*dr)+0.0161*Math.sin(dr*2*Mp)-0.0004*Math.sin(dr*3*Mp);C=C+0.0104*Math.sin(dr*2*F)-0.0051*Math.sin(dr*(M+Mp))-0.0074*Math.sin(dr*(M-Mp))+0.0004*Math.sin(dr*(2*F+M));C=C-0.0004*Math.sin(dr*(2*F-M))-0.0006*Math.sin(dr*(2*F+Mp))+0.0010*Math.sin(dr*(2*F-Mp))+0.0005*Math.sin(dr*(2*Mp+M));const dt=T<-11?0.001+0.000839*T+0.0002261*T2-0.00000845*T3-0.000000081*T*T3:-0.000278+0.000265*T+0.000262*T2;return J+C-dt}
+const nmDay=k=>Math.floor(newMoon(k)+0.5+TZ/24);
+function sunDeg(j){const T=(j-2451545)/36525,T2=T*T,dr=PI/180,M=357.5291+35999.0503*T-0.0001559*T2-0.00000048*T*T2,L0=280.46645+36000.76983*T+0.0003032*T2;let DL=(1.9146-0.004817*T-0.000014*T2)*Math.sin(dr*M)+(0.019993-0.000101*T)*Math.sin(dr*2*M)+0.00029*Math.sin(dr*3*M);let L=L0+DL;return L-360*Math.floor(L/360)}
+const sunSeg=d=>Math.floor(sunDeg(d-0.5-TZ/24)/30);
+function m11(yy){const k=Math.floor((jdn(31,12,yy)-2415021)/29.530588853);let n=nmDay(k);if(sunSeg(n)>=9)n=nmDay(k-1);return n}
+function leapOff(a11){const k=Math.floor((a11-2415021.076998695)/29.530588853+0.5);let last,i=1,arc=sunSeg(nmDay(k+i));do{last=arc;i++;arc=sunSeg(nmDay(k+i))}while(arc!=last&&i<14);return i-1}
+const LC={};
+function lunar(dd,mm,yy){const key=yy*10000+mm*100+dd;if(LC[key])return LC[key];const dn=jdn(dd,mm,yy),k=Math.floor((dn-2415021.076998695)/29.530588853);let ms=nmDay(k+1);if(ms>dn)ms=nmDay(k);let a11=m11(yy),b11=a11,ly;if(a11>=ms){ly=yy;a11=m11(yy-1)}else{ly=yy+1;b11=m11(yy+1)}const ld=dn-ms+1,diff=Math.floor((ms-a11)/29);let leap=0,lm=diff+11;if(b11-a11>365){const lo=leapOff(a11);if(diff>=lo){lm=diff+10;if(diff==lo)leap=1}}if(lm>12)lm-=12;if(lm>=11&&diff<4)ly-=1;return LC[key]={d:ld,m:lm,y:ly,leap,jd:dn}}
+/* ---------- dữ liệu lịch pháp ---------- */
+const CAN=['Giáp','Ất','Bính','Đinh','Mậu','Kỷ','Canh','Tân','Nhâm','Quý'];
+const CHI=['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
+const GIAP=['Chuột','Trâu','Hổ','Mèo','Rồng','Rắn','Ngựa','Dê','Khỉ','Gà','Chó','Lợn'];
+const NA=[['Hải Trung Kim','vàng trong biển'],['Lư Trung Hỏa','lửa trong lò'],['Đại Lâm Mộc','gỗ rừng già'],['Lộ Bàng Thổ','đất ven đường'],['Kiếm Phong Kim','vàng mũi kiếm'],['Sơn Đầu Hỏa','lửa trên núi'],['Giản Hạ Thủy','nước khe suối'],['Thành Đầu Thổ','đất trên thành'],['Bạch Lạp Kim','vàng chân đèn'],['Dương Liễu Mộc','gỗ cây dương liễu'],['Tuyền Trung Thủy','nước giữa dòng suối'],['Ốc Thượng Thổ','đất mái nhà'],['Tích Lịch Hỏa','lửa sấm sét'],['Tùng Bách Mộc','gỗ tùng bách'],['Trường Lưu Thủy','nước chảy dài'],['Sa Trung Kim','vàng trong cát'],['Sơn Hạ Hỏa','lửa dưới chân núi'],['Bình Địa Mộc','gỗ đồng bằng'],['Bích Thượng Thổ','đất trên vách'],['Kim Bạch Kim','vàng pha bạch kim'],['Phú Đăng Hỏa','lửa ngọn đèn'],['Thiên Hà Thủy','nước trên trời'],['Đại Trạch Thổ','đất nền nhà lớn'],['Thoa Xuyến Kim','vàng trang sức'],['Tang Đố Mộc','gỗ cây dâu'],['Đại Khê Thủy','nước khe lớn'],['Sa Trung Thổ','đất pha cát'],['Thiên Thượng Hỏa','lửa trên trời'],['Thạch Lựu Mộc','gỗ cây lựu đá'],['Đại Hải Thủy','nước biển lớn']];
+const HANH=['Kim','Thủy','Mộc','Hỏa','Thổ'];
+const hIdx=n=>HANH.indexOf(n.split(' ').pop());
+const sinh=i=>(i+1)%5,khac=i=>(i+2)%5;
+function rel(me,o){if(me===o)return['bình hòa',0];if(sinh(o)===me)return['tương sinh cho bạn',1];if(sinh(me)===o)return['bạn sinh ra (hao lực)',0];if(khac(o)===me)return['khắc bạn',-1];return['bạn khắc',0]}
+const idx60=(c,h)=>((6*c-5*h)%60+60)%60;
+const napOf=(c,h)=>NA[Math.floor(idx60(c,h)/2)];
+const TIET=['Xuân phân','Thanh minh','Cốc vũ','Lập hạ','Tiểu mãn','Mang chủng','Hạ chí','Tiểu thử','Đại thử','Lập thu','Xử thử','Bạch lộ','Thu phân','Hàn lộ','Sương giáng','Lập đông','Tiểu tuyết','Đại tuyết','Đông chí','Tiểu hàn','Đại hàn','Lập xuân','Vũ thủy','Kinh trập'];
+const THAN=[['Thanh Long',1],['Minh Đường',1],['Thiên Hình',0],['Chu Tước',0],['Kim Quỹ',1],['Kim Đường',1],['Bạch Hổ',0],['Ngọc Đường',1],['Thiên Lao',0],['Huyền Vũ',0],['Tư Mệnh',1],['Câu Trận',0]];
+const TRUC=[
+['Kiến',1,['Xuất hành','Khai trương','Nhậm chức','Gặp đối tác, quý nhân'],['Động thổ','Đào giếng','Lợp mái nhà']],
+['Trừ',1,['Dọn dẹp, bỏ thói quen xấu','Khám chữa bệnh','Cắt tóc, làm đẹp'],['Cưới hỏi','Khai trương','Đi xa']],
+['Mãn',1,['Cầu tài, cầu phúc','Mua sắm, nhập hàng','Mở kho'],['Kiện tụng','Nhậm chức','Uống thuốc lâu dài']],
+['Bình',0,['Sửa sang nhà cửa','Việc thường ngày','Làm đường, san nền'],['Đào mương','Kiện tụng']],
+['Định',1,['Ký hợp đồng, giao dịch','Cưới hỏi','Nhập học','Lên kế hoạch dài hạn'],['Kiện tụng','Xuất hành xa','Chữa bệnh']],
+['Chấp',0,['Xây dựng, tu sửa','Trồng cây','Tuyển người'],['Xuất hành','Chuyển nhà','Chi tiền lớn']],
+['Phá',-1,['Phá dỡ nhà cũ','Chữa bệnh'],['Cưới hỏi','Khai trương','Ký kết','Khởi công việc lớn']],
+['Nguy',-1,['Cúng lễ, tĩnh tâm','Việc nhỏ, cẩn trọng'],['Leo cao, đi sông nước','Đầu tư mạo hiểm','Vay mượn']],
+['Thành',1,['Khai trương','Cưới hỏi','Ký kết','Nhập học, xây dựng'],['Kiện tụng','Tranh chấp']],
+['Thu',0,['Thu tiền, đòi nợ','Thu hoạch, tích trữ','Mua hàng'],['Khai trương','Chi tiền lớn','An táng']],
+['Khai',1,['Khai trương','Nhậm chức','Xuất hành','Cưới hỏi, động thổ'],['An táng','Đào mộ']],
+['Bế',-1,['Hoàn tất việc dang dở','Nghỉ ngơi','Lấp hố, đắp đê'],['Khai trương','Nhậm chức','Xuất hành','Chữa mắt']]];
+const GHD=['110100101100','001101001011','110011010010','101100110100','001011001101','010010110011'];
+const WD=['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+const hourRange=i=>{const s=(i*2+23)%24;return `${s}h–${(s+2)%24}h`};
+const tamHop=(a,b)=>a!==b&&(a-b+12)%4===0;
+const lucHop=(a,b)=>(a+b)%12===1;
+const xung=(a,b)=>Math.abs(a-b)===6;
+const hai=(a,b)=>(a+b)%12===7;
+function dayInfo(y,m,d){
+const L=lunar(d,m,y),jd=L.jd,cD=(jd+9)%10,hD=(jd+1)%12;
+const cM=(L.y*12+L.m+3)%10,hM=(L.m+1)%12,cY=(L.y+6)%10,hY=(L.y+8)%12;
+const sd=sunDeg(jd-0.5-TZ/24),tiet=TIET[Math.floor(sd/15)];
+const mTiet=(Math.floor(((sd-315+360)%360)/30)+2)%12;
+const truc=TRUC[(hD-mTiet+12)%12];
+const start=((L.m-1)%6)*2,than=THAN[(hD-start+12)%12];
+const hours=[...GHD[hD%6]].map((v,i)=>v==='1'?i:-1).filter(i=>i>=0);
+return {L,cD,hD,cM,hM,cY,hY,tiet,truc,than,hours,nap:napOf(cD,hD),wd:new Date(y,m-1,d).getDay()};
+}
+/* ---------- tiện ích ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ds=(y,m,d)=>`${y}-${pad(m)}-${pad(d)}`;
+const pd=s=>s.split('-').map(Number);
+const now=new Date(),TODAY=ds(now.getFullYear(),now.getMonth()+1,now.getDate());
+const money=n=>Math.round(n||0).toLocaleString('vi-VN')+'đ';
+const kc=n=>Math.round(n||0).toLocaleString('vi-VN')+' kcal';
+const sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('vi-VN');
+function parseMoney(s){s=String(s||'').toLowerCase().replace(/\s|đ|vnd/g,'');const m=s.match(/^([\d.,]+)(k|tr|m)?$/);if(!m)return NaN;if(m[2]){const v=parseFloat(m[1].replace(',','.'));return Math.round(v*(m[2]==='k'?1e3:1e6))}return parseInt(m[1].replace(/[.,]/g,''),10)}
+/* ---------- trạng thái & lưu trữ ---------- */
+let S={profile:null,days:{}},db=null,uid=null,ready=false;
+const LS='songay.v1';
+try{const j=JSON.parse(localStorage.getItem(LS)||'null');if(j){S.profile=j.profile||null;S.days=j.days||{}}}catch(e){}
+const lsSave=()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}};
+const dirty=new Set();let tmr=null,flushing=false;
+function setStatus(t){$('#status').textContent=t}
+function save(key){lsSave();dirty.add(key);clearTimeout(tmr);tmr=setTimeout(flush,700)}
+async function flush(){if(!db||!uid||flushing)return;flushing=true;try{while(dirty.size){const k=[...dirty][0];dirty.delete(k);let body;if(k==='profile')body={p:S.profile};else{const pre=k.slice(2),days={};for(const d in S.days)if(d.startsWith(pre))days[d]=S.days[d];body={days}}try{await db.doc('data/users/'+uid+'/'+k).set(body);setStatus('Đã lưu vào tài khoản Claude của bạn · dùng được trên mọi thiết bị')}catch(e){setStatus('Chưa lưu được lên tài khoản, dữ liệu vẫn nằm trên trình duyệt này');if(e&&e.code==='unavailable')dirty.add(k);break}}}finally{flushing=false}}
+const timeout=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))]);
+async function initDb(){
+try{
+if(!window.claude||!window.claude.use)throw 0;
+const [d,u]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+if(!d||!u)throw 0;const id=await u.id();if(!id)throw 0;
+const snap=await timeout(d.collection('data/users/'+id).get(),10000);
+db=d;uid=id;const local={...S.days},cloudKeys=new Set();
+for(const doc of snap.docs){const x=doc.data()||{};if(doc.id==='profile'&&x.p)S.profile=x.p;else if(doc.id.startsWith('m-')&&x.days){for(const k in x.days){S.days[k]=x.days[k];cloudKeys.add(k)}}}
+if(!snap.docs.some(x=>x.id==='profile')&&S.profile)dirty.add('profile');
+for(const k in local)if(!cloudKeys.has(k))dirty.add('m-'+k.slice(0,7));
+lsSave();setStatus('Đã đồng bộ với tài khoản Claude của bạn');if(dirty.size)flush();
+}catch(e){setStatus(window.claude?'Dữ liệu đang lưu trên trình duyệt này · nên sao lưu định kỳ trong Hồ sơ':'Dữ liệu lưu trên điện thoại này · nhớ tải file sao lưu định kỳ trong Hồ sơ')}
+ready=true;if(!S.profile)openSetup(true);renderAll();
+}
+/* ---------- hồ sơ & mục tiêu ---------- */
+function ageAt(dob,date){const [y,m,d]=pd(dob),[Y,M,D]=pd(date);return Y-y-((M<m||(M===m&&D<d))?1:0)}
+function targets(date){
+const P=S.profile;if(!P)return null;const a=ageAt(P.dob,date);
+const bmr=10*P.w+6.25*P.h-5*a+(P.sex==='nam'?5:-161),base=bmr*1.2,ex=+P.ex||0;
+const adj=P.goal==='lose'?-400:P.goal==='gain'?300:0;
+return {bmr,base,ex,in:Math.max(bmr,base+ex+adj),out:base+ex,lim:+P.lim||0};
+}
+function owner(){const P=S.profile;if(!P)return null;const [y,m,d]=pd(P.dob),L=lunar(d,m,y);const c=(L.y+6)%10,h=(L.y+8)%12;return {ly:L.y,c,h,nap:napOf(c,h),sex:P.sex}}
+function personal(I){
+const o=owner();if(!o)return {f:[],s:0};const f=[];
+if(xung(I.hD,o.h))f.push([-2,`Ngày ${CHI[I.hD]} xung tuổi ${CHI[o.h]} của bạn: hạn chế việc lớn`]);
+else if(hai(I.hD,o.h))f.push([-1,`Ngày ${CHI[I.hD]} lục hại với tuổi ${CHI[o.h]}: dễ thị phi, nhịn một chút`]);
+if(tamHop(I.hD,o.h))f.push([1,`Ngày ${CHI[I.hD]} tam hợp với tuổi ${CHI[o.h]}: dễ được giúp đỡ`]);
+if(lucHop(I.hD,o.h))f.push([1,`Ngày ${CHI[I.hD]} lục hợp với tuổi ${CHI[o.h]}: thuận cho hợp tác`]);
+const r=rel(hIdx(o.nap[0]),hIdx(I.nap[0]));
+if(r[1]!==0)f.push([r[1],`Ngày mệnh ${I.nap[0]} ${r[0]} (mệnh ${o.nap[0]})`]);
+else f.push([0,`Ngày mệnh ${I.nap[0]}: ${r[0]} với mệnh ${o.nap[0]} của bạn`]);
+const ld=I.L.d;
+if([3,7,13,18,22,27].includes(ld))f.push([-1,'Ngày Tam Nương: tránh cưới hỏi, khai trương, đi xa']);
+if([5,14,23].includes(ld))f.push([-1,'Ngày Nguyệt Kỵ: không nên đi xa, khởi sự lớn']);
+return {f,s:f.reduce((a,x)=>a+x[0],0)};
+}
+function verdict(I){const p=personal(I),t=(I.than[1]?1:-1)+I.truc[1]+p.s;const v=t>=3?['Rất tốt cho bạn','p-ok']:t>=1?['Khá tốt cho bạn','p-ok']:t===0?['Bình thường','p-mid']:t>=-2?['Hơi kém, nên cẩn trọng','p-bad']:['Xấu, tránh việc lớn','p-bad'];return {p,v}}
+/* ---------- lịch ---------- */
+let sel=TODAY,view={y:now.getFullYear(),m:now.getMonth()+1};
+const dayRec=k=>S.days[k]||null;
+const logged=r=>r&&(r.in!=null||r.ex!=null||r.w!=null||(r.sp&&r.sp.length));
+const ST_TXT=['Không đạt mục tiêu','Đạt 1 trong 2 mục tiêu','Đạt cả 2 mục tiêu'];
+function ico(s,z=18){const c=s===2?'var(--ok)':s===1?'var(--half)':'var(--red)';
+const inner=s===2?'<path d="M6.5 12.5l3.5 3.5 7.5-8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
+:s===1?'<path d="M12 3a9 9 0 0 1 0 18z" fill="#fff" opacity=".9"/><path d="M8.5 12.5l2 2 3.5-4" fill="none" stroke="'+c+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" transform="translate(-1.5 0)"/>'
+:'<path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>';
+return `<span class="ico" role="img" aria-label="${ST_TXT[s]}"><svg width="${z}" height="${z}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="${c}"/>${inner}</svg></span>`}
+function goals(k){const r=dayRec(k);if(!logged(r))return null;const t=tOf(k);if(!t)return null;
+const sp=(r.sp||[]).reduce((a,x)=>a+x.a,0),gain=S.profile&&S.profile.goal==='gain';
+const h=r.in!=null&&(gain?r.in>=t.in:r.in<=t.in);return {h,s:sp<=t.lim,hasIn:r.in!=null,sp,t}}
+function dayStatus(k){const g=goals(k);if(!g)return null;return (g.h?1:0)+(g.s?1:0)}
+function renderCal(){
+const {y,m}=view,first=(new Date(y,m-1,1).getDay()+6)%7,nd=new Date(y,m,0).getDate();
+const L1=lunar(1,m,y);
+$('#calTitle').textContent=`Tháng ${m}/${y}`;
+let h=['T2','T3','T4','T5','T6','T7','CN'].map(x=>`<div class="wh">${x}</div>`).join('')+'<div></div>'.repeat(first);
+for(let d=1;d<=nd;d++){const I=dayInfo(y,m,d),k=ds(y,m,d),L=I.L;
+const lab=L.d===1?`${L.d}/${L.m}${L.leap?'n':''}`:L.d===15?'Rằm':L.d;
+const cls=['c',I.than[1]?'hd':'',L.d===1?'l1':'',I.wd===0?'sun':'',k===TODAY?'today':'',k===sel?'sel':''].join(' ');
+h+=`<button class="${cls}" data-d="${k}" aria-label="Ngày ${d}/${m}, âm ${L.d}/${L.m}"><b>${d}</b><small>${lab}</small>${(s=>s==null?'':`<span class="st" title="${ST_TXT[s]}">${ico(s,15)}</span>`)(dayStatus(k))}</button>`}
+$('#cal').innerHTML=h;
+}
+function renderSheet(){
+const [y,m,d]=pd(sel),I=dayInfo(y,m,d),L=I.L,{v}=verdict(I);
+$('#sheet').innerHTML=`<div class="top"><span>Tháng ${m} · ${y}</span><span>${sel===TODAY?'Hôm nay':''}</span></div>
+<div class="big"><div class="num">${d}</div><div class="wd">${WD[I.wd]}</div>
+<div class="ld"><div class="lnum">${L.d}</div><div style="text-align:left;font-size:14px">Tháng ${L.m}${L.leap?' (nhuận)':''} âm lịch<br><b>Năm ${CAN[I.cY]} ${CHI[I.hY]}</b></div></div></div>
+<div class="lun"><span class="mut">Ngày</span><b>${CAN[I.cD]} ${CHI[I.hD]} · ${I.nap[0]}</b>
+<span class="mut">Tháng</span><b>${CAN[I.cM]} ${CHI[I.hM]}</b>
+<span class="mut">Tiết khí</span><b>${I.tiet}</b>
+<span class="mut">Thần</span><b>${I.than[0]} <span class="pill ${I.than[1]?'p-ok':'p-bad'}">${I.than[1]?'Hoàng đạo':'Hắc đạo'}</span></b>
+<span class="mut">Trực</span><b>${I.truc[0]}</b>
+${(g=>g?`<span class="mut">Kết quả</span><b class="stline">${ico((g.h?1:0)+(g.s?1:0),20)} ${ST_TXT[(g.h?1:0)+(g.s?1:0)]}<span class="sm mut">(calo ${g.h?'đạt':g.hasIn?'chưa đạt':'chưa ghi'} · chi tiêu ${g.s?'trong hạn mức':'vượt'})</span></b>`:'')(goals(sel))}
+${S.profile?`<span class="mut">Với bạn</span><b><span class="pill ${v[1]}">${v[0]}</span></b>`:''}</div>`;
+}
+function renderDayInfo(){
+const [y,m,d]=pd(sel),I=dayInfo(y,m,d),{p}=verdict(I),o=owner();
+const curH=sel===TODAY?Math.floor(((now.getHours()+1)%24)/2):-1;
+const nen=[...I.truc[2]],ky=[...I.truc[3]];
+if(!I.than[1])ky.push('Khởi sự việc thật quan trọng');
+if(p.f.some(x=>x[0]<=-2))ky.unshift('Việc lớn của riêng bạn (ký kết, đầu tư, đi xa)');
+const bad=CHI.map((c,i)=>i).filter(i=>!I.hours.includes(i)).map(i=>`${CHI[i]} (${hourRange(i)})`).join(', ');
+$('#dayinfo').innerHTML=`<h2>Ngày ${d}/${m}/${y} · âm lịch ${I.L.d}/${I.L.m}</h2>
+<h3 style="margin-top:0">Giờ hoàng đạo</h3>
+<div class="hours">${I.hours.map(i=>`<div class="hr ${i===curH?'now':''}"><b>${CHI[i]}</b><span>${hourRange(i)}</span></div>`).join('')}</div>
+<p class="sm mut" style="margin:8px 0 4px">Giờ hắc đạo: ${bad}</p>
+<div class="cols" style="margin-top:8px">
+<div><h3>Nên làm</h3><ul class="l">${nen.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+<div><h3>Không nên</h3><ul class="l">${ky.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+<div><h3>Riêng với bạn${o?` (tuổi ${CAN[o.c]} ${CHI[o.h]})`:''}</h3>${o?p.f.map(x=>`<div class="fac"><i class="${x[0]>0?'plus':x[0]<0?'minus':'mut'}">${x[0]>0?'+':x[0]<0?'−':'•'}</i><span>${x[1]}</span></div>`).join(''):'<p class="mut sm">Nhập ngày sinh trong Hồ sơ để xem.</p>'}</div>
+</div>`;
+}
+function rec(k){if(!S.days[k])S.days[k]={in:null,ex:null,w:null,sp:[]};const r=S.days[k];if(!r.t){const t=targets(k);if(t)r.t={in:Math.round(t.in),out:Math.round(t.out),base:Math.round(t.base),ex:t.ex,lim:t.lim}}return r}
+function tOf(k){const r=dayRec(k);if(r&&r.t)return r.t;const t=targets(k);return t?{in:Math.round(t.in),out:Math.round(t.out),base:Math.round(t.base),ex:t.ex,lim:t.lim}:null}
+function renderHealth(){
+const el=$('#health');if(!S.profile){el.innerHTML='<h2>Sức khỏe</h2><p class="mut">Nhập hồ sơ để tính lượng calo.</p>';return}
+const r=dayRec(sel)||{},t=tOf(sel),P=S.profile,bmi=P.w/((P.h/100)**2);
+el.innerHTML=`<h2>Sức khỏe</h2>
+<div class="kv"><span>Mục tiêu nạp</span><b>${kc(t.in)}</b></div>
+<div class="kv"><span>Tiêu hao dự kiến (nền ${kc(t.base)} + vận động ${kc(t.ex)})</span><b>${kc(t.out)}</b></div>
+<div class="kv mut sm"><span>BMI hiện tại ${bmi.toFixed(1)} · ${bmi<18.5?'thiếu cân':bmi<23?'bình thường':bmi<25?'thừa cân nhẹ':'thừa cân'} (chuẩn châu Á)</span></div>
+<div class="row" style="margin-top:10px">
+<label class="f">Thực nạp (kcal)<input id="hIn" type="number" inputmode="numeric" min="0" value="${r.in??''}" placeholder="Cuối ngày điền"></label>
+<label class="f">Vận động đốt (kcal)<input id="hEx" type="number" inputmode="numeric" min="0" value="${r.ex??''}" placeholder="Ví dụ: 250"></label>
+<label class="f">Cân nặng (kg)<input id="hW" type="number" inputmode="decimal" step="0.1" value="${r.w??''}" placeholder="Tùy chọn"></label>
+</div><div id="hRes"></div>`;
+healthRes();
+}
+function healthRes(){
+const r=dayRec(sel)||{},t=tOf(sel),el=$('#hRes');if(!el)return;
+if(r.in==null&&r.ex==null){el.innerHTML='<div class="res mut sm">Cuối ngày điền số calo đã ăn và đã đốt để xem kết quả.</div>';return}
+const inn=r.in||0,ex=r.ex||0,over=inn-t.in,out=t.base+ex,bal=inn-out;
+el.innerHTML=`<div class="res">
+<div class="sm mut">So với mục tiêu nạp</div>
+<div class="big2 ${over>0?'minus':'plus'}">${over>0?'Vượt '+kc(over):'Còn dưới '+kc(-over)}</div>
+<div class="meter ${over>0?'over':''}"><i style="width:${Math.min(100,inn/t.in*100)}%"></i></div>
+<div class="kv"><span>Nạp ${kc(inn)} / ${kc(t.in)}</span><span>${Math.round(inn/t.in*100)}%</span></div>
+<div class="kv" style="margin-top:8px"><span>Vận động ${kc(ex)} / mục tiêu ${kc(t.ex)}</span><b class="${ex>=t.ex?'plus':'minus'}">${ex>=t.ex?'Đạt':'Thiếu '+kc(t.ex-ex)}</b></div>
+<div class="kv"><span>Cân bằng năng lượng (nạp − tiêu hao ${kc(out)})</span><b class="${bal>0?'minus':'plus'}">${sgn(bal)} kcal</b></div></div>`;
+}
+function renderSpend(){
+const el=$('#spend');if(!S.profile){el.innerHTML='<h2>Chi tiêu</h2><p class="mut">Nhập hạn mức trong Hồ sơ.</p>';return}
+const t=tOf(sel);
+el.innerHTML=`<h2>Chi tiêu</h2><div class="kv"><span>Hạn mức hôm nay</span><b>${money(t.lim)}</b></div>
+<form id="spForm" class="row" style="margin-top:10px;align-items:flex-end">
+<label class="f" style="flex:1 1 120px">Số tiền<input id="spA" inputmode="numeric" placeholder="50k, 1.2tr, 35000" autocomplete="off"></label>
+<label class="f" style="flex:2 1 160px">Khoản chi<input id="spN" placeholder="Ăn trưa, xăng, cà phê…" autocomplete="off"></label>
+<button class="btn pri" style="flex:0 0 auto;margin-bottom:10px">Thêm</button></form>
+<div id="spErr" class="sm minus"></div><ul class="items" id="spList"></ul><div id="spRes"></div>`;
+spendRes();
+}
+function spendRes(){
+const r=dayRec(sel),t=tOf(sel),items=(r&&r.sp)||[],tot=items.reduce((a,x)=>a+x.a,0),left=t.lim-tot;
+$('#spList').innerHTML=items.map((x,i)=>`<li><span>${esc(x.n||'Khoản chi')}</span><b>${money(x.a)}</b><button class="x" type="button" data-del="${i}" aria-label="Xóa khoản này">×</button></li>`).join('');
+$('#spRes').innerHTML=`<div class="res"><div class="sm mut">Thực chi ${money(tot)}</div>
+<div class="big2 ${left<0?'minus':'plus'}">${left<0?'Vượt '+money(-left):'Còn '+money(left)}</div>
+<div class="meter ${left<0?'over':''}"><i style="width:${t.lim?Math.min(100,tot/t.lim*100):0}%"></i></div>
+<div class="kv sm mut"><span>${items.length} khoản</span><span>${t.lim?Math.round(tot/t.lim*100):0}% hạn mức</span></div></div>`;
+}
+const monthKey=k=>'m-'+k.slice(0,7);
+function onHealthInput(e){
+const id=e.target.id;if(!['hIn','hEx','hW'].includes(id))return;
+const r=rec(sel),v=e.target.value===''?null:Number(e.target.value);
+r[{hIn:'in',hEx:'ex',hW:'w'}[id]]=isFinite(v)?v:null;save(monthKey(sel));healthRes();renderCal();renderSheet();
+}
+function renderLich(){renderSheet();renderCal();renderDayInfo();renderHealth();renderSpend()}
+/* ---------- báo cáo ---------- */
+function agg(from,to){
+const o={n:0,days:0,inn:0,tin:0,ex:0,tex:0,sp:0,lim:0,spDays:0,w:[],items:[]};
+for(const k of Object.keys(S.days).sort()){if(k<from||k>to)continue;const r=S.days[k];if(!logged(r))continue;const t=r.t||tOf(k);o.n++;
+if(r.in!=null){o.days++;o.inn+=r.in;o.tin+=t.in;o.ex+=r.ex||0;o.tex+=t.ex}
+if(r.sp&&r.sp.length||r.in!=null||r.ex!=null){o.spDays++;o.sp+=(r.sp||[]).reduce((a,x)=>a+x.a,0);o.lim+=t.lim;(r.sp||[]).forEach(x=>o.items.push({...x,k}))}
+if(r.w!=null)o.w.push([k,r.w])}
+return o;
+}
+function tiles(o,label){
+const dIn=o.inn-o.tin,dSp=o.sp-o.lim;
+const w=o.w.length?`<div class="tile"><div class="t">Cân nặng</div><div class="v">${o.w[o.w.length-1][1]} kg</div><div class="d mut">${o.w.length>1?((x=>(x>0?'+':'')+x.toFixed(1).replace('.',','))(o.w[o.w.length-1][1]-o.w[0][1]))+' kg so với lần ghi đầu kỳ':'1 lần ghi'}</div></div>`:'';
+return `<div class="tiles">
+<div class="tile"><div class="t">Tổng nạp ${label}</div><div class="v">${kc(o.inn)}</div><div class="d ${dIn>0?'minus':'plus'}">${o.days?(dIn>0?'Vượt ':'Dưới ')+kc(Math.abs(dIn))+' so với mục tiêu':'Chưa có dữ liệu'}</div></div>
+<div class="tile"><div class="t">Trung bình nạp/ngày</div><div class="v">${o.days?kc(o.inn/o.days):'—'}</div><div class="d mut">${o.days} ngày có ghi calo</div></div>
+<div class="tile"><div class="t">Vận động</div><div class="v">${kc(o.ex)}</div><div class="d ${o.ex>=o.tex?'plus':'minus'}">${o.tex?Math.round(o.ex/o.tex*100)+'% mục tiêu':'—'}</div></div>
+<div class="tile"><div class="t">Tổng chi ${label}</div><div class="v">${money(o.sp)}</div><div class="d ${dSp>0?'minus':'plus'}">${o.spDays?(dSp>0?'Vượt ':'Tiết kiệm ')+money(Math.abs(dSp))+' so với hạn mức':'Chưa có dữ liệu'}</div></div>
+<div class="tile"><div class="t">Trung bình chi/ngày</div><div class="v">${o.spDays?money(o.sp/o.spDays):'—'}</div><div class="d mut">${o.spDays} ngày có ghi</div></div>${w}</div>`;
+}
+function bars(vals,limit,labels,fmt,limLabel){
+const max=Math.max(limit||0,...vals.map(v=>v??0))*1.1||1;
+return (limit?`<div class="limcap">- - - ${limLabel}</div>`:'')+`<div class="chart">${limit?`<div class="lim" style="bottom:${limit/max*100}%"></div>`:''}${vals.map((v,i)=>v==null?`<i class="none" title="${labels[i]}: chưa ghi"></i>`:`<i class="${limit&&v>limit?'over':''}" style="height:${v/max*100}%" title="${labels[i]}: ${fmt(v)}"></i>`).join('')}</div>
+<div class="axis">${labels.map((l,i)=>`<span>${labels.length>15?(i%5===0||i===labels.length-1?l:''):l}</span>`).join('')}</div>`;
+}
+function stCounts(keys){const c=[0,0,0];keys.forEach(k=>{const s=dayStatus(k);if(s!=null)c[s]++});return c}
+function stRow(c){return `<div class="tiles3">${[2,1,0].map(s=>`<div class="tile"><div class="t">${ico(s,22)}${['Không đạt','Đạt 1 phần','Đạt cả 2'][s]}</div><div class="v">${c[s]} ngày</div></div>`).join('')}</div>`}
+function stSummary(y,m,a,b,strip){const keys=[];for(let i=a;i<=b;i++)keys.push(ds(y,m,i));
+return stRow(stCounts(keys))+(strip?`<div class="strip">${keys.map(k=>{const s=dayStatus(k);return `<div>${s==null?'<span style="display:inline-block;height:18px"></span>':ico(s,18)}<br>${pd(k)[2]}</div>`}).join('')}</div>`:'')}
+function stYear(y,k){return stRow(stCounts(Object.keys(S.days).filter(x=>x>=ds(y,1,1)&&x<=k)))}
+function renderReport(){
+const el=$('#report');if(!S.profile){el.innerHTML='<div class="card mut">Nhập hồ sơ để bắt đầu.</div>';return}
+const k=$('#rDate').value||sel,[y,m,d]=pd(k),r=dayRec(k)||{},t=tOf(k);
+const sp=(r.sp||[]).reduce((a,x)=>a+x.a,0);
+const mo=agg(ds(y,m,1),k),yr=agg(ds(y,1,1),k),nd=new Date(y,m,0).getDate();
+const dSp=[],dKc=[],lab=[];
+for(let i=1;i<=nd;i++){const kk=ds(y,m,i),rr=S.days[kk];lab.push(String(i));dSp.push(kk<=k&&rr&&(rr.sp&&rr.sp.length||rr.in!=null)?(rr.sp||[]).reduce((a,x)=>a+x.a,0):null);dKc.push(kk<=k&&rr&&rr.in!=null?rr.in:null)}
+const ySp=[],yl=[];let ylim=0;
+for(let i=1;i<=12;i++){const a=agg(ds(y,i,1),ds(y,i,31)>k?k:ds(y,i,31));yl.push('T'+i);ySp.push(ds(y,i,1)>k?null:(a.spDays?a.sp:null))}
+const top=mo.items.sort((a,b)=>b.a-a.a).slice(0,5);
+el.innerHTML=`<div class="card" style="margin-bottom:16px"><h2>Kết quả ngày ${d}/${m}/${y}</h2>
+${logged(r)?`<div class="tiles">
+<div class="tile"><div class="t">Nạp / mục tiêu</div><div class="v">${r.in!=null?kc(r.in):'—'}</div><div class="d ${r.in>t.in?'minus':'plus'}">${r.in!=null?sgn(r.in-t.in)+' kcal so với '+kc(t.in):'Chưa ghi'}</div></div>
+<div class="tile"><div class="t">Vận động</div><div class="v">${kc(r.ex)}</div><div class="d ${(r.ex||0)>=t.ex?'plus':'minus'}">Mục tiêu ${kc(t.ex)}</div></div>
+<div class="tile"><div class="t">Cân bằng năng lượng</div><div class="v">${r.in!=null?sgn(r.in-(t.base+(r.ex||0)))+' kcal':'—'}</div><div class="d mut">Nạp − (nền + vận động)</div></div>
+<div class="tile"><div class="t">Chi / hạn mức</div><div class="v">${money(sp)}</div><div class="d ${sp>t.lim?'minus':'plus'}">${sp>t.lim?'Vượt '+money(sp-t.lim):'Còn '+money(t.lim-sp)}</div></div></div>`:'<p class="mut">Ngày này chưa có dữ liệu.</p>'}</div>
+<div class="card" style="margin-bottom:16px"><h2>Lũy kế tháng ${m}/${y}</h2><p class="mut sm" style="margin-top:-8px">Từ 1/${m} đến ${d}/${m} · ${mo.n}/${d} ngày có ghi</p>${tiles(mo,'tháng')}
+${stSummary(y,m,1,d,true)}
+<div class="g2e" style="margin:14px 0 0"><div><h3>Chi tiêu từng ngày</h3>${bars(dSp,t.lim,lab,money,'Hạn mức '+money(t.lim))}</div>
+<div><h3>Calo nạp từng ngày</h3>${bars(dKc,t.in,lab,kc,'Mục tiêu '+kc(t.in))}</div></div>
+${top.length?`<h3>Khoản chi lớn nhất tháng</h3><ul class="items">${top.map(x=>`<li><span>${esc(x.n||'Khoản chi')} <span class="mut sm">· ${pd(x.k)[2]}/${m}</span></span><b>${money(x.a)}</b></li>`).join('')}</ul>`:''}</div>
+<div class="card"><h2>Lũy kế năm ${y}</h2><p class="mut sm" style="margin-top:-8px">Từ 1/1 đến ${d}/${m} · ${yr.n} ngày có ghi</p>${tiles(yr,'năm')}
+${stYear(y,k)}
+<h3>Chi tiêu theo tháng</h3>${bars(ySp,0,yl,money,'')}</div>`;
+}
+/* ---------- phong thủy ---------- */
+const CUNG={1:['Khảm','Thủy','Đông'],2:['Khôn','Thổ','Tây'],3:['Chấn','Mộc','Đông'],4:['Tốn','Mộc','Đông'],6:['Càn','Kim','Tây'],7:['Đoài','Kim','Tây'],8:['Cấn','Thổ','Tây'],9:['Ly','Hỏa','Đông']};
+const DIRS={1:['Đông Nam','Đông','Nam','Bắc','Tây','Đông Bắc','Tây Bắc','Tây Nam'],2:['Đông Bắc','Tây','Tây Bắc','Tây Nam','Đông','Đông Nam','Nam','Bắc'],3:['Nam','Bắc','Đông Nam','Đông','Tây Nam','Tây Bắc','Đông Bắc','Tây'],4:['Bắc','Nam','Đông','Đông Nam','Tây Bắc','Tây Nam','Tây','Đông Bắc'],6:['Tây','Đông Bắc','Tây Nam','Tây Bắc','Đông Nam','Đông','Bắc','Nam'],7:['Tây Bắc','Tây Nam','Đông Bắc','Tây','Bắc','Nam','Đông Nam','Đông'],8:['Tây Nam','Tây Bắc','Tây','Đông Bắc','Nam','Bắc','Đông','Đông Nam'],9:['Đông','Đông Nam','Bắc','Nam','Đông Bắc','Tây','Tây Nam','Tây Bắc']};
+const DN=[['Sinh Khí','Thu hút tài lộc, danh tiếng'],['Thiên Y','Sức khỏe tốt, được che chở'],['Diên Niên','Gia đạo, tình cảm bền vững'],['Phục Vị','Tinh thần vững, tiến bộ sự nghiệp'],['Họa Hại','Dễ thị phi, thất bại nhỏ'],['Ngũ Quỷ','Mất mát, tranh cãi'],['Lục Sát','Xáo trộn tình cảm, kiện tụng'],['Tuyệt Mệnh','Xấu nhất: bệnh tật, tổn hại']];
+const COL={Kim:[['Trắng','#f7f7f7'],['Xám','#9aa0a6'],['Ghi bạc','#c4c4c4']],Thủy:[['Đen','#151515'],['Xanh dương','#1e5aa8'],['Xanh nước biển','#0b86b3']],Mộc:[['Xanh lá cây','#2e8b3d'],['Xanh lục','#76b041']],Hỏa:[['Đỏ','#d62828'],['Hồng','#e86a92'],['Cam','#f28c28'],['Tím','#7b3fa0']],Thổ:[['Vàng','#e0b326'],['Nâu đất','#8b5a2b']]};
+const NUM={Kim:[6,7],Thủy:[1],Mộc:[3,4],Hỏa:[9],Thổ:[2,5,8]};
+const SAO_NAM=['La Hầu','Thổ Tú','Thủy Diệu','Thái Bạch','Thái Dương','Vân Hán','Kế Đô','Thái Âm','Mộc Đức'],SAO_NU=['Kế Đô','Vân Hán','Mộc Đức','Thái Âm','Thổ Tú','La Hầu','Thái Dương','Thái Bạch','Thủy Diệu'];
+const SAO_T={'Thái Dương':[1,'Sao tốt: công danh, tài lộc thuận'],'Thái Âm':[1,'Sao tốt: may mắn, tiền bạc, hỷ sự'],'Mộc Đức':[1,'Sao tốt: bình an, gia đạo ấm êm'],'Thổ Tú':[0,'Trung bình: dễ thị phi, nên kín đáo'],'Thủy Diệu':[0,'Trung bình: có lộc nhưng cẩn thận sông nước, lời nói'],'Vân Hán':[0,'Trung bình: nóng nảy, dễ kiện tụng'],'La Hầu':[-1,'Sao xấu: thị phi, giấy tờ, kiện cáo'],'Kế Đô':[-1,'Sao xấu: buồn phiền, hao tài'],'Thái Bạch':[-1,'Sao xấu: hao tài, nên chi tiêu chặt chẽ']};
+const TAMTAI={0:2,4:2,8:2,2:8,6:8,10:8,1:11,5:11,9:11,3:5,7:5,11:5};
+const yc=y=>({c:(y+6)%10,h:(y+8)%12});
+const ycName=y=>{const {c,h}=yc(y);return CAN[c]+' '+CHI[h]};
+const kua=(y,sex)=>{let k=sex==='nam'?(11-y%9)%9:(y%9+4)%9;if(k===0)k=9;if(k===5)k=sex==='nam'?2:8;return k};
+function compat(y){
+const a=yc(y),na=hIdx(napOf(a.c,a.h)[0]),res=[];
+for(let x=y-15;x<=y+15;x++){const b=yc(x),nb=hIdx(napOf(b.c,b.h)[0]);let s=0;
+if(tamHop(a.h,b.h)||lucHop(a.h,b.h))s+=2;if(a.h===b.h)s+=1;if(xung(a.h,b.h)||hai(a.h,b.h))s-=2;
+const dc=(a.c-b.c+10)%10;if(dc===5)s+=1;if(dc===4||dc===6)s-=1;
+if(sinh(na)===nb||sinh(nb)===na)s+=1;if(khac(na)===nb||khac(nb)===na)s-=1;res.push([x,s])}
+const near=(p,q)=>Math.abs(p[0]-y)-Math.abs(q[0]-y);
+return {good:res.filter(r=>r[1]>=2).sort((p,q)=>q[1]-p[1]||near(p,q)).slice(0,7),bad:res.filter(r=>r[1]<=-2).sort((p,q)=>p[1]-q[1]||near(p,q)).slice(0,7)};
+}
+function renderPT(){
+const sex=$('#ptSex').value,y=+$('#ptYear').value;
+if(!(y>=1900&&y<=2100)){$('#ptHero').innerHTML='<div class="card mut">Nhập năm sinh để tra cứu.</div>';$('#ptOut').innerHTML='';return}
+const {c,h}=yc(y),na=napOf(c,h),hanh=na[0].split(' ').pop(),hi=HANH.indexOf(hanh);
+const k=kua(y,sex),cu=CUNG[k],dirs=DIRS[k],gt=sex==='nam'?'Nam':'Nữ';
+const gen=HANH[(hi+4)%5],kill=HANH[(hi+3)%5],drain=HANH[sinh(hi)];
+const sw=a=>`<div class="sw">${a.map(x=>`<span><i style="background:${x[1]}"></i>${x[0]}</span>`).join('')}</div>`;
+const cmp=compat(y),nums=[...new Set([...NUM[hanh],...NUM[gen]])].sort((p,q)=>p-q);
+const cy=lunar(now.getDate(),now.getMonth()+1,now.getFullYear()).y;
+const sao=yy=>{const age=yy-y+1,list=sex==='nam'?SAO_NAM:SAO_NU,n=list[((age-10)%9+9)%9],t=SAO_T[n];return `<div class="dir"><div><b>${yy} · ${n}</b>Tuổi mụ ${age}</div><div class="${t[0]>0?'plus':t[0]<0?'minus':''}">${t[1]}</div></div>`};
+const tt=TAMTAI[h],ttYears=[];for(let yy=cy;ttYears.length<3&&yy<cy+15;yy++){const d=((yy+8)%12-tt+12)%12;if(d<3)ttYears.push(`${yy} (${ycName(yy)})`)}
+$('#ptHero').innerHTML=`<div class="hero"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#fff" stroke-width="3"/><circle cx="50" cy="50" r="30" fill="none" stroke="#fff" stroke-width="2"/><path d="M50 4v92M4 50h92M17 17l66 66M83 17L17 83" stroke="#fff" stroke-width="1.5"/></svg>
+<h2>${gt} ${y} · tuổi ${CAN[c]} ${CHI[h]}</h2>
+<div class="sub">Mệnh <b>${hanh}</b> (nạp âm ${na[0]} – ${na[1]}) · cung <b>${cu[0]}</b> (hành ${cu[1]}, ${cu[2]} tứ mệnh) · con giáp: ${GIAP[h]}</div></div>`;
+$('#ptOut').innerHTML=`<div class="g2e">
+<div class="card"><h2>Màu sắc</h2><h3 style="margin-top:0">Màu bản mệnh (${hanh})</h3>${sw(COL[hanh])}
+<h3>Màu tương sinh (${gen} sinh ${hanh})</h3>${sw(COL[gen])}
+<h3 class="minus">Màu kỵ (${kill} khắc ${hanh})</h3>${sw(COL[kill])}
+<h3>Nên hạn chế (${hanh} sinh ${drain}, dễ hao)</h3>${sw(COL[drain])}
+<h3>Con số may mắn</h3><div class="ages">${nums.map(n=>`<span><b>${n}</b></span>`).join('')}</div></div>
+<div class="card"><h2>Hướng hợp (nhà, cửa, bàn làm việc)</h2><div class="dir">${[0,1,2,3].map(i=>`<div><b class="plus">${dirs[i]}</b>${DN[i][0]}: ${DN[i][1]}</div>`).join('')}</div>
+<h3 class="minus">Hướng nên tránh</h3><div class="dir">${[4,5,6,7].map(i=>`<div><b class="minus">${dirs[i]}</b>${DN[i][0]}: ${DN[i][1]}</div>`).join('')}</div></div></div>
+<div class="g2e">
+<div class="card"><h2>Tuổi hợp làm ăn, kết hôn</h2><div class="ages">${cmp.good.map(r=>`<span>${ycName(r[0])} (${r[0]})</span>`).join('')}</div>
+<h3 class="minus">Tuổi kỵ</h3><div class="ages">${cmp.bad.map(r=>`<span>${ycName(r[0])} (${r[0]})</span>`).join('')}</div>
+<p class="note">Tính theo địa chi (tam hợp, lục hợp, xung, hại), thiên can và ngũ hành nạp âm trong khoảng ±15 tuổi. Mỗi trường phái có thể cho kết quả hơi khác.</p></div>
+<div class="card"><h2>Sao chiếu mệnh & hạn</h2>${sao(cy)}<div style="height:8px"></div>${sao(cy+1)}
+<h3>Năm Tam Tai sắp tới</h3><p style="margin:0">${ttYears.join(', ')}</p></div></div>
+<p class="note">Thông tin phong thủy mang tính tham khảo theo quan niệm dân gian.</p>`;
+}
+/* ---------- hồ sơ (modal) ---------- */
+function openSetup(first){
+const P=S.profile||{};$('#fName').value=P.name||'';$('#fSex').value=P.sex||'nam';$('#fDob').value=P.dob||'';$('#fH').value=P.h||'';$('#fW').value=P.w||'';$('#fGoal').value=P.goal||'keep';$('#fEx').value=P.ex??300;$('#fLim').value=P.lim||'';
+$('#setClose').style.display=first?'none':'';$('#backup').style.display=first?'none':'';$('#setup').classList.add('on');$('#bkMsg').textContent='';
+}
+$('#setForm').addEventListener('submit',e=>{e.preventDefault();const lim=parseMoney($('#fLim').value);if(!(lim>=0)){$('#fLim').setCustomValidity('Nhập số tiền, ví dụ 200000 hoặc 200k');$('#fLim').reportValidity();return}
+S.profile={name:$('#fName').value.trim(),sex:$('#fSex').value,dob:$('#fDob').value,h:+$('#fH').value,w:+$('#fW').value,goal:$('#fGoal').value,ex:+$('#fEx').value||0,lim};
+save('profile');$('#setup').classList.remove('on');syncPT(true);renderAll()});
+$('#fLim').addEventListener('input',e=>e.target.setCustomValidity(''));
+$('#setClose').addEventListener('click',()=>$('#setup').classList.remove('on'));
+$('#openSet').addEventListener('click',()=>openSetup(false));
+$('#bkCopy').addEventListener('click',async()=>{const t=JSON.stringify(S);try{await navigator.clipboard.writeText(t);$('#bkMsg').textContent='Đã sao chép. Dán vào ghi chú hoặc email để cất giữ.'}catch(e){$('#bkText').value=t;$('#bkText').select();$('#bkMsg').textContent='Không sao chép tự động được: dữ liệu đã hiện trong ô, hãy chọn và sao chép.'}});
+$('#bkLoad').addEventListener('click',()=>{try{const j=JSON.parse($('#bkText').value);if(!j||typeof j.days!=='object')throw 0;if(j.profile)S.profile=j.profile;Object.assign(S.days,j.days);save('profile');new Set(Object.keys(j.days).map(monthKey)).forEach(k=>save(k));$('#bkMsg').textContent='Đã khôi phục '+Object.keys(j.days).length+' ngày dữ liệu.';renderAll()}catch(e){$('#bkMsg').textContent='Bản sao lưu không hợp lệ.'}});
+/* ---------- điều hướng & sự kiện ---------- */
+function syncPT(force){const o=owner();if(o&&(force||!$('#ptYear').value)){$('#ptYear').value=o.ly;$('#ptSex').value=o.sex}}
+function showTab(t){if(!['lich','bao-cao','phong-thuy'].includes(t))t='lich';document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));if(t==='bao-cao')renderReport();if(t==='phong-thuy'){syncPT();renderPT()}}
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b){location.hash=b.dataset.t;showTab(b.dataset.t)}});
+window.addEventListener('hashchange',()=>showTab(location.hash.slice(1)));
+$('#cal').addEventListener('click',e=>{const b=e.target.closest('.c');if(!b)return;sel=b.dataset.d;$('#rDate').value=sel;renderLich()});
+$('#prevM').addEventListener('click',()=>{view.m--;if(view.m<1){view.m=12;view.y--}renderCal()});
+$('#nextM').addEventListener('click',()=>{view.m++;if(view.m>12){view.m=1;view.y++}renderCal()});
+$('#todayB').addEventListener('click',()=>{sel=TODAY;view={y:now.getFullYear(),m:now.getMonth()+1};renderLich()});
+$('#health').addEventListener('input',onHealthInput);
+$('#spend').addEventListener('submit',e=>{if(e.target.id!=='spForm')return;e.preventDefault();const a=parseMoney($('#spA').value);if(!(a>0)){$('#spErr').textContent='Nhập số tiền hợp lệ, ví dụ 50000, 50k hoặc 1.2tr';return}$('#spErr').textContent='';const r=rec(sel);r.sp=[...(r.sp||[]),{a,n:$('#spN').value.trim().slice(0,80)}];save(monthKey(sel));$('#spA').value='';$('#spN').value='';$('#spA').focus();spendRes();renderCal();renderSheet()});
+$('#spend').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;const r=rec(sel);r.sp=r.sp.filter((_,i)=>i!==+b.dataset.del);save(monthKey(sel));spendRes();renderCal();renderSheet()});
+$('#rDate').addEventListener('change',renderReport);
+$('#rToday').addEventListener('click',()=>{$('#rDate').value=TODAY;renderReport()});
+$('#ptSex').addEventListener('change',renderPT);$('#ptYear').addEventListener('input',renderPT);
+function renderAll(){renderLich();if($('#t-bao-cao').classList.contains('on'))renderReport();if($('#t-phong-thuy').classList.contains('on')){syncPT();renderPT()}}
+$('#lgIco').innerHTML=[2,1,0].map(s=>`<span class="stline" style="display:inline-flex;gap:5px;margin-right:12px">${ico(s,14)}${s===2?'Đạt cả 2':s===1?'Đạt 1 phần':'Không đạt'}</span>`).join('');
+(async()=>{try{if(!window.claude||!window.claude.use)return;const dk=await window.claude.use('desktop');if(!dk||!dk.install)return;if(await dk.install.state()==='available'){const b=$('#install');b.hidden=false;b.addEventListener('click',async()=>{try{await dk.install.request()}catch(e){}})}}catch(e){}})();
+if(!window.claude){
+$('#bkFileRow').hidden=false;
+$('#bkFile').addEventListener('click',()=>{const b=new Blob([JSON.stringify(S)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='so-ngay-sao-luu-'+TODAY+'.json';document.body.appendChild(a);a.click();a.remove();$('#bkMsg').textContent='Đã tải file sao lưu.'});
+$('#bkPick').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;$('#bkText').value=await f.text();$('#bkLoad').click();e.target.value=''});
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+$('#rDate').value=TODAY;
+renderLich();showTab(location.hash.slice(1));
+initDb();
+}
+</script>
+</body>
+</html>
